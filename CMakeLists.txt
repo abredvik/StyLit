@@ -24,6 +24,8 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         ${PROJECT_SOURCES}
         rgba.h
         util.h
+        stylit.h stylit.cpp
+        patchmatch.h patchmatch.cpp
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET StyLit APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
@@ -64,6 +66,17 @@ install(TARGETS StyLit
     BUNDLE DESTINATION .
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
+file(GLOB EIGEN_DIR_CONTENTS ${CMAKE_CURRENT_LIST_DIR}/Eigen/*)
+list(LENGTH EIGEN_DIR_CONTENTS EIGEN_DIR_SIZE)
+if(EIGEN_DIR_SIZE EQUAL 0)
+    message(FATAL_ERROR "Eigen dependency not pulled, please run `git submodule update --init --recursive`")
+endif()
+
+# This allows you to `#include <Eigen/...>`
+target_include_directories(${PROJECT_NAME} PRIVATE
+    Eigen
 )
 
 if(QT_VERSION_MAJOR EQUAL 6)

@@ -3,6 +3,10 @@
 #include <QApplication>
 #include "util.h"
 
+#include "Eigen/Dense"
+
+using namespace Eigen;
+
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
@@ -13,7 +17,10 @@ int main(int argc, char *argv[])
 
     // load in target mesh + buffers
 
-    // load in stylized image
+    // load in stylized imagexw
+
+    Vector3f bean = Vector3f(1.f, 1.f, 1.f);
+    std::cout << bean << std::endl;
 
 
     MainWindow w;

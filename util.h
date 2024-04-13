@@ -7,6 +7,9 @@
 
 #include "rgba.h"
 
+#include "Eigen/Dense"
+using namespace Eigen;
+
 std::tuple<std::vector<RGBA>, int, int> loadImageFromFile(const QString &file) {
     QImage myImage;
     if (!myImage.load(file)) {
@@ -41,6 +44,56 @@ bool saveImageToFile(const QString &file, const std::vector<RGBA>& data, int wid
         return false;
     }
     return true;
+}
+
+/**
+ * @brief Canvas2D::pos_to_index returns an index based on the given x and y coordinates
+ * @param x
+ * @param y
+ * @param width
+ */
+int pos_to_index(int x, int y, int width) {
+    int index = (y * width) + x;
+    return index;
+}
+
+/**
+ * @brief Canvas2D::pos_to_index returns an index based on the given x and y coordinates
+ * @param x
+ * @param y
+ * @param width
+ */
+Vector2i index_to_position(int index, int width) {
+    Vector2i coordinates;
+    coordinates[0] = index % width;
+    coordinates[1] = index / width;
+    return coordinates;
+}
+
+
+/**
+ * @brief Canvas2D::int_to_float returns a float corresponding to the given uint8_t
+ * @param interger
+ */
+float int_to_float(std::uint8_t integer) {
+    return integer / float(255);
+}
+
+/**
+ * @brief Canvas2D::float_to_int returns a integer corresponding to the given float
+ * @param f
+ */
+std::uint8_t float_to_int(float f) {
+    return round(255 * f);
+}
+
+RGBA toRGBA(const Eigen::Vector3f &color) {
+
+    std::uint8_t red = (std::uint8_t)(255.f * std::min(std::max(color[0],0.f), 1.f));
+    std::uint8_t green = (std::uint8_t)(255.f * std::min(std::max(color[1],0.f), 1.f));
+    std::uint8_t blue = (std::uint8_t)(255.f * std::min(std::max(color[2],0.f), 1.f));
+
+    return RGBA{red, green, blue, 255};
 }
 
 #endif // UTIL_H
