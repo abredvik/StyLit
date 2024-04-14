@@ -1,6 +1,10 @@
 #include "patchmatch.h"
 
-patchmatch::patchmatch()
+Patchmatcher::Patchmatcher()
 {
 
+}
+
+
+NNF_t Patchmatcher::patch_match(){
 }

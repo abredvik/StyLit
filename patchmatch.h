@@ -1,11 +1,16 @@
 #ifndef PATCHMATCH_H
 #define PATCHMATCH_H
 
+#include "util.h"
 
-class patchmatch
+class Patchmatcher
 {
 public:
-    patchmatch();
+    Patchmatcher();
+
+    std::vector<std::pair<int, float>> errors;
+
+    NNF_t patch_match();
 };
 
 #endif // PATCHMATCH_H

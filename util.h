@@ -10,6 +10,8 @@
 #include "Eigen/Dense"
 using namespace Eigen;
 
+typedef std::unordered_map<int, Vector2i> NNF_t;
+
 std::tuple<std::vector<RGBA>, int, int> loadImageFromFile(const QString &file) {
     QImage myImage;
     if (!myImage.load(file)) {
@@ -94,6 +96,10 @@ RGBA toRGBA(const Eigen::Vector3f &color) {
     std::uint8_t blue = (std::uint8_t)(255.f * std::min(std::max(color[2],0.f), 1.f));
 
     return RGBA{red, green, blue, 255};
+}
+
+Vector2i nearest_neighbor(){
+    return Vector2i(0, 0);
 }
 
 #endif // UTIL_H
