@@ -57,13 +57,13 @@ int main(int argc, char *argv[])
 
     // load in stylized imagexw
 
-    auto srcTup = loadImageFromFile("Data/test_1.png");
+    auto srcTup = loadImageFromFile("Data/Bell-Peppers.png");
     const std::vector<RGBA>& source_image = std::get<0>(srcTup);
     int source_width = std::get<1>(srcTup);
     int source_height = std::get<2>(srcTup);
     std::vector<VectorXf> source_patches = get_patches(source_image, source_width, source_height);
 
-    auto tgtTup = loadImageFromFile("Data/test_2.png");
+    auto tgtTup = loadImageFromFile("Data/daniel_2.png");
     const std::vector<RGBA>& target_image = std::get<0>(tgtTup);
     int target_width = std::get<1>(tgtTup);
     int target_height = std::get<2>(tgtTup);
