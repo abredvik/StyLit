@@ -5,7 +5,7 @@
 using namespace Eigen;
 
 #include "rgba.h"
-#include "util.h"
+//#include "util.h"
 
 struct Patch {
     // vectors of length 75 for now

@@ -12,41 +12,14 @@ using namespace Eigen;
 
 typedef std::unordered_map<int, Vector2i> NNF_t;
 
-std::tuple<std::vector<RGBA>, int, int> loadImageFromFile(const QString &file) {
-    QImage myImage;
-    if (!myImage.load(file)) {
-        throw std::runtime_error("Failed to load in image");
-    }
-    myImage = myImage.convertToFormat(QImage::Format_RGBX8888);
-    int width = myImage.width();
-    int height = myImage.height();
-    QByteArray arr = QByteArray::fromRawData((const char*) myImage.bits(), myImage.sizeInBytes());
-
-    std::vector<RGBA> data;
-    data.reserve(width * height);
-    for (int i = 0; i < arr.size() / 4.f; i++){
-        data.push_back(RGBA{(std::uint8_t) arr[4*i], (std::uint8_t) arr[4*i+1], (std::uint8_t) arr[4*i+2], (std::uint8_t) arr[4*i+3]});
-    }
-
-    return std::make_tuple(data, width, height);
-}
+std::tuple<std::vector<RGBA>, int, int> loadImageFromFile(const QString &file);
 
 /**
  * @brief Saves the current canvas image to the specified file path.
  * @param file: file path to save image to
  * @return True if successfully saves image, False otherwise.
  */
-bool saveImageToFile(const QString &file, const std::vector<RGBA>& data, int width, int height) {
-    QImage myImage = QImage(width, height, QImage::Format_RGBX8888);
-    for (int i = 0; i < data.size(); i++){
-        myImage.setPixelColor(i % width, i / width, QColor(data[i].r, data[i].g, data[i].b, data[i].a));
-    }
-    if (!myImage.save(file)) {
-        std::cerr<< "Failed to save image" <<std::endl;
-        return false;
-    }
-    return true;
-}
+bool saveImageToFile(const QString &file, const std::vector<RGBA>& data, int width, int height);
 
 /**
  * @brief Canvas2D::pos_to_index returns an index based on the given x and y coordinates
@@ -54,10 +27,7 @@ bool saveImageToFile(const QString &file, const std::vector<RGBA>& data, int wid
  * @param y
  * @param width
  */
-int pos_to_index(int x, int y, int width) {
-    int index = (y * width) + x;
-    return index;
-}
+int pos_to_index(const Vector2i& xy, int width);
 
 /**
  * @brief Canvas2D::pos_to_index returns an index based on the given x and y coordinates
@@ -65,41 +35,23 @@ int pos_to_index(int x, int y, int width) {
  * @param y
  * @param width
  */
-Vector2i index_to_position(int index, int width) {
-    Vector2i coordinates;
-    coordinates[0] = index % width;
-    coordinates[1] = index / width;
-    return coordinates;
-}
+Vector2i index_to_position(int index, int width);
 
 
 /**
  * @brief Canvas2D::int_to_float returns a float corresponding to the given uint8_t
  * @param interger
  */
-float int_to_float(std::uint8_t integer) {
-    return integer / float(255);
-}
+float uint8_to_float(std::uint8_t byte);
 
 /**
  * @brief Canvas2D::float_to_int returns a integer corresponding to the given float
  * @param f
  */
-std::uint8_t float_to_int(float f) {
-    return round(255 * f);
-}
+std::uint8_t float_to_int(float f);
 
-RGBA toRGBA(const Eigen::Vector3f &color) {
+RGBA toRGBA(const Eigen::Vector3f &color);
 
-    std::uint8_t red = (std::uint8_t)(255.f * std::min(std::max(color[0],0.f), 1.f));
-    std::uint8_t green = (std::uint8_t)(255.f * std::min(std::max(color[1],0.f), 1.f));
-    std::uint8_t blue = (std::uint8_t)(255.f * std::min(std::max(color[2],0.f), 1.f));
-
-    return RGBA{red, green, blue, 255};
-}
-
-Vector2i nearest_neighbor(){
-    return Vector2i(0, 0);
-}
+Vector2i nearest_neighbor();
 
 #endif // UTIL_H
