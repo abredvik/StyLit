@@ -5,28 +5,8 @@
 using namespace Eigen;
 
 #include "rgba.h"
-//#include "util.h"
-
-struct Patch {
-    // vectors of length 75 for now
-    VectorXf buffer;
-    Vector2i coordinates;
-    std::vector<Patch*> neighbor_patches;
-    bool is_matched;
-};
-
-struct Image {
-    int width;
-    int height;
-    std::vector<Patch*> patches_orignal;
-    std::vector<Patch*> patches_LPE1;
-    std::vector<Patch*> patches_LPE2;
-    std::vector<Patch*> patches_LPE3;
-    void init_patches(const std::vector<RGBA> &original,const std::vector<RGBA> &LPE1,
-                     const std::vector<RGBA> &LPE2, const std::vector<RGBA> &LPE3);
-};
-
-
+#include "util.h"
+#include "patchmatch.h"
 
 class Stylit
 {

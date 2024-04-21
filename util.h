@@ -12,6 +12,24 @@ using namespace Eigen;
 
 typedef std::unordered_map<int, Vector2i> NNF_t;
 
+struct Patch {
+    // vectors of length 75 for now
+    VectorXf buffer;
+    Vector2i coordinates;
+    std::vector<int> neighbor_patches;
+    bool is_matched;
+};
+
+struct Image {
+    int width;
+    int height;
+    std::vector<Patch*> patches_orignal;
+    std::vector<Patch*> patches_LPE1;
+    std::vector<Patch*> patches_LPE2;
+    std::vector<Patch*> patches_LPE3;
+    std::vector<Patch*> patches_stylized;
+};
+
 std::tuple<std::vector<RGBA>, int, int> loadImageFromFile(const QString &file);
 
 /**
