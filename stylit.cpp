@@ -32,6 +32,17 @@ std::vector<RGBA> Stylit::run(const Image& src, Image& tgt, int iterations){
     for(int i = 0; i < iterations; i++){
         stylit_algorithm(src, tgt);
     }
+
+    std::vector<RGBA> output(tgt.patches_stylized.size());
+
+    for(int j = 0; tgt.patches_stylized.size(); j ++){
+        float r, g, b;
+        r = tgt.patches_stylized[j]->buffer[36];
+        g = tgt.patches_stylized[j]->buffer[37];
+        b = tgt.patches_stylized[j]->buffer[38];
+        output[j] = toRGBA(Vector3f(r, g, b));
+    }
+
     return output;
 }
 
@@ -48,18 +59,21 @@ void Stylit::stylit_algorithm(const Image& src, Image& tgt){
         int k = calculate_error_budget(patchmatcher.errors);
 
         for (int i = 0; i < k; i ++){
-            int error_index = patchmatcher.errors[i].first;
+            int source_index = patchmatcher.errors[i].first;
 
-            if(tgt.patches_original[error_index]->is_matched){
+            int target_index = pos_to_index(temp_NNF[source_index] + index_to_position(source_index, src.width), tgt.width);
+
+            if(tgt.patches_original[target_index]->is_matched){
                 continue;
             }
 
             targets_covered ++;
-            tgt.patches_original[error_index]->is_matched = true;
-            tgt.patches_LPE1[error_index]->is_matched = true;
-            tgt.patches_LPE2[error_index]->is_matched = true;
-            tgt.patches_LPE3[error_index]->is_matched = true;
-            final_NNF[error_index] = temp_NNF[error_index];
+            tgt.patches_original[target_index]->is_matched = true;
+            tgt.patches_LPE1[target_index]->is_matched = true;
+            tgt.patches_LPE2[target_index]->is_matched = true;
+            tgt.patches_LPE3[target_index]->is_matched = true;
+            final_NNF[source_index] = temp_NNF[source_index];
+            final_reverse_NNF[target_index] = -temp_NNF[source_index];
 
         }
 
@@ -69,8 +83,7 @@ void Stylit::stylit_algorithm(const Image& src, Image& tgt){
     resolve_unmatched(src, tgt);
 
     for(int i = 0; i < (tgt.width * tgt.height); i ++){
-        // TO DO: Write average()
-        average(i);
+        average(i, src, tgt);
     }
 
 }
@@ -111,7 +124,11 @@ void Stylit::resolve_unmatched(const Image& src, Image& tgt) {
             tgt_patches[3] = &(tgt.patches_LPE3[i]->buffer);
             const VectorXf& tgt_style = tgt.patches_stylized[i]->buffer;
 
-            final_NNF[i] = nearest_neighbor(src, tgt_patches, tgt_style, index_to_position(i, tgt.width));
+            Vector2i nearest_neighbor_offset = nearest_neighbor(src, tgt_patches, tgt_style, index_to_position(i, tgt.width));
+            int source_index = pos_to_index(index_to_position(i, tgt.width) - nearest_neighbor_offset, src.width);
+
+            final_NNF[source_index] = nearest_neighbor_offset;
+            final_reverse_NNF[i] = -final_NNF[source_index];
         }
     }
 }
@@ -138,7 +155,12 @@ Vector2i Stylit::nearest_neighbor(const Image& src, std::vector<VectorXf*> tgt_p
     return nearest;
 }
 
-void Stylit::average(int index){
-    output[index] = toRGBA(Vector3f(0, 0, 0));
+void Stylit::average(int index, const Image& src, Image& tgt){
+
+    Vector2i offset = final_reverse_NNF[index];
+    Vector2i xy = index_to_position(index, tgt.width);
+    int source_index = pos_to_index(xy + offset, src.width);
+
+    tgt.patches_stylized[index]->buffer = src.patches_stylized[source_index]->buffer;
 }
 

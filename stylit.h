@@ -16,7 +16,7 @@ public:
 
     NNF_t final_NNF;
 
-    std::vector<RGBA> output;
+    NNF_t final_reverse_NNF;
 
     void stylit_algorithm(const Image& src, Image& tgt);
 
@@ -24,7 +24,7 @@ public:
 
     void resolve_unmatched(const Image& src, Image& tgt);
 
-    void average(int index);
+    void average(int index, const Image& src, Image& tgt);
 
     std::vector<RGBA> run(const Image& src, Image& tgt, int iterations);
 

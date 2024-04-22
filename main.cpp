@@ -57,13 +57,13 @@ int main(int argc, char *argv[])
     init_image(srcPaths, srcImg);
     init_image(tgtPaths, tgtImg);
 
-    Patchmatcher patchMatcher;
+    //Patchmatcher patchMatcher;
 
-    NNF_t NNF = patchMatcher.patch_match(srcImg, tgtImg);
+    //NNF_t NNF = patchMatcher.patch_match(srcImg, tgtImg);
 
-    std::vector<RGBA> reconstruction = recreate_image(NNF, tgtImg);
+    //std::vector<RGBA> reconstruction = recreate_image(NNF, tgtImg);
 
-    saveImageToFile("Output/RECONSTRUCTION.png", reconstruction, tgtImg.width, tgtImg.height);
+    //saveImageToFile("Output/RECONSTRUCTION.png", reconstruction, tgtImg.width, tgtImg.height);
 
 //    int target_width;
 //    int target_height;
@@ -80,12 +80,9 @@ int main(int argc, char *argv[])
 
 //    std::vector<RGBA> source_style_rbgs;
 
-//    Stylit stylit(source_width, source_height, target_width, target_height,
-//                  source_color_rbgs, source_LPE1_rbgs, source_LPE2_rbgs, source_LPE3_rbgs,
-//                  target_color_rbgs, target_LPE1_rbgs, target_LPE2_rbgs, target_LPE3_rbgs,
-//                  source_style_rbgs);
+    Stylit stylit;
 
-//    stylit.run(6);
+    stylit.run(srcImg, tgtImg, 2);
 
     MainWindow w;
     w.show();
