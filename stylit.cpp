@@ -17,8 +17,8 @@ void init_image(const std::vector<QString>& filenames, Image& img) {
         const QString& filename  = filenames[i];
         auto tup = loadImageFromFile(filename);
         const std::vector<RGBA>& RGBimage = std::get<0>(tup);
-        int width = std::get<1>(tup);
-        int height = std::get<2>(tup);
+        width = std::get<1>(tup);
+        height = std::get<2>(tup);
         const std::vector<Patch*>& patches = get_patches(RGBimage, width, height);
 
         switch (i) {
