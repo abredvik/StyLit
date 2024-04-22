@@ -35,4 +35,6 @@ public:
     std::vector<RGBA> run(int iterations);
 };
 
+void init_image(const std::vector<QString>& filepath, Image& img);
+
 #endif // STYLIT_H

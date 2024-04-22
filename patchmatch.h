@@ -21,6 +21,8 @@ public:
     NNF_t patch_match(const Image& src, const Image& tgt);
 
     std::vector<RGBA> recreate_image(NNF_t NNF, const std::vector<RGBA>& target, int width);
+
+    double mu = 2;
 };
 
 double Distance(const VectorXf& A, const VectorXf& B);

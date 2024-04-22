@@ -20,21 +20,9 @@ int main(int argc, char *argv[])
 
     // load in stylized imagexw
 
-    Image srcImg;
+    Image srcImg, tgtImg;
+//    init_image()
 
-    auto srcTup = loadImageFromFile("Data/test_1.png");
-    const std::vector<RGBA>& source_image = std::get<0>(srcTup);
-    int source_width = std::get<1>(srcTup);
-    int source_height = std::get<2>(srcTup);
-    srcImg.height = source_height;
-    srcImg.width = source_width;
-
-//    std::vector<VectorXf> source_patches = get_patches(source_image, source_width, source_height);
-
-    auto tgtTup = loadImageFromFile("Data/test_2.png");
-    const std::vector<RGBA>& target_image = std::get<0>(tgtTup);
-    int target_width = std::get<1>(tgtTup);
-    int target_height = std::get<2>(tgtTup);
 //    std::vector<VectorXf> target_patches = get_patches(target_image, target_width, target_height);
 
     NNF_t NNF = patch_match(source_patches, target_patches, source_width, source_height);

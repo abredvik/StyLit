@@ -10,6 +10,30 @@ Stylit::Stylit(int source_width, int source_height, int target_width, int target
 
 }
 
+void init_image(const std::vector<QString>& filenames, Image& img) {
+    int width, height;
+//#pragma omp parallel for
+    for (int i = 0; i < filenames.size(); ++i) {
+        const QString& filename  = filenames[i];
+        auto tup = loadImageFromFile(filename);
+        const std::vector<RGBA>& RGBimage = std::get<0>(tup);
+        int width = std::get<1>(tup);
+        int height = std::get<2>(tup);
+        const std::vector<Patch*>& patches = get_patches(RGBimage, width, height);
+
+        switch (i) {
+        case 0: img.patches_orignal = patches; break;
+        case 1: img.patches_LPE1 = patches; break;
+        case 2: img.patches_LPE2 = patches; break;
+        case 3: img.patches_LPE3 = patches; break;
+        case 4: img.patches_stylized = patches; break;
+        }
+    }
+
+    img.height = height;
+    img.width = width;
+}
+
 std::vector<RGBA> Stylit::run(int iterations){
     for(int i = 0; i < iterations; i++){
         stylit_algorithm();
