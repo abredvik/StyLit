@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
 
     Stylit stylit;
 
-    stylit.run(srcImg, tgtImg, 2);
+    saveImageToFile("Output/RECONSTRUCTION.png", stylit.run(srcImg, tgtImg, 2), tgtImg.width, tgtImg.height);
 
     MainWindow w;
     w.show();

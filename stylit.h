@@ -18,6 +18,10 @@ public:
 
     NNF_t final_reverse_NNF;
 
+    int targets_covered = 0;
+
+    float percent_coverage = 0.f;
+
     void stylit_algorithm(const Image& src, Image& tgt);
 
     int calculate_error_budget(std::vector<std::pair<int, double>> &errors);

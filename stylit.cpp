@@ -29,9 +29,20 @@ void init_image(const std::vector<QString>& filenames, Image& img) {
 }
 
 std::vector<RGBA> Stylit::run(const Image& src, Image& tgt, int iterations){
-    for(int i = 0; i < iterations; i++){
+//    for(int i = 0; i < iterations; i++){
+//        stylit_algorithm(src, tgt);
+//    }
+
+    while(percent_coverage < 0.7f){
+        std::cout << percent_coverage << std::endl;
         stylit_algorithm(src, tgt);
+
+        for(int i = 0; i < (tgt.width * tgt.height); i ++){
+            average(i, src, tgt);
+        }
     }
+
+    resolve_unmatched(src, tgt);
 
     std::vector<RGBA> output(tgt.patches_stylized.size());
 
@@ -49,42 +60,30 @@ std::vector<RGBA> Stylit::run(const Image& src, Image& tgt, int iterations){
 void Stylit::stylit_algorithm(const Image& src, Image& tgt){
 
     Patchmatcher patchmatcher(src.width, src.height);
-
-    int targets_covered = 0;
     int total_targets = tgt.patches_original.size();
-    float percent_coverage = 0.f;
 
-    while(percent_coverage < 0.95f){
-        NNF_t temp_NNF = patchmatcher.patch_match(src, tgt);
-        int k = calculate_error_budget(patchmatcher.errors);
+    NNF_t temp_NNF = patchmatcher.patch_match(src, tgt);
+    int k = calculate_error_budget(patchmatcher.errors);
 
-        for (int i = 0; i < k; i ++){
-            int source_index = patchmatcher.errors[i].first;
+    for (int i = 0; i < k; i ++){
+        int source_index = patchmatcher.errors[i].first;
 
-            int target_index = pos_to_index(temp_NNF[source_index] + index_to_position(source_index, src.width), tgt.width);
+        int target_index = pos_to_index(temp_NNF[source_index] + index_to_position(source_index, src.width), tgt.width);
 
-            if(tgt.patches_original[target_index]->is_matched){
-                continue;
-            }
-
-            targets_covered ++;
-            tgt.patches_original[target_index]->is_matched = true;
-            tgt.patches_LPE1[target_index]->is_matched = true;
-            tgt.patches_LPE2[target_index]->is_matched = true;
-            tgt.patches_LPE3[target_index]->is_matched = true;
-            final_NNF[source_index] = temp_NNF[source_index];
-            final_reverse_NNF[target_index] = -temp_NNF[source_index];
-
+        if(tgt.patches_original[target_index]->is_matched){
+            continue;
         }
 
-        percent_coverage = (float) targets_covered / (float) total_targets;
+        targets_covered ++;
+        tgt.patches_original[target_index]->is_matched = true;
+        tgt.patches_LPE1[target_index]->is_matched = true;
+        tgt.patches_LPE2[target_index]->is_matched = true;
+        tgt.patches_LPE3[target_index]->is_matched = true;
+        final_NNF[source_index] = temp_NNF[source_index];
+        final_reverse_NNF[target_index] = -temp_NNF[source_index];
     }
 
-    resolve_unmatched(src, tgt);
-
-    for(int i = 0; i < (tgt.width * tgt.height); i ++){
-        average(i, src, tgt);
-    }
+    percent_coverage = (float) targets_covered / (float) total_targets;
 
 }
 
@@ -108,7 +107,7 @@ int Stylit::calculate_error_budget(std::vector<std::pair<int, double>> &errors){
     Vector2d result = l_matrix.colPivHouseholderQr().solve(b_vector);
     double a = result(0);
     double b = result(1);
-    int k = errors.size() * (sqrt(1.0 / b) + (a / b));
+    int k = errors.size() * (-sqrt(1.0 / b) + (a / b));
 
     return k;
 }
