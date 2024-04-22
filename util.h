@@ -23,7 +23,7 @@ struct Patch {
 struct Image {
     int width;
     int height;
-    std::vector<Patch*> patches_orignal;
+    std::vector<Patch*> patches_original;
     std::vector<Patch*> patches_LPE1;
     std::vector<Patch*> patches_LPE2;
     std::vector<Patch*> patches_LPE3;

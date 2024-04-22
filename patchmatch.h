@@ -6,9 +6,9 @@
 class Patchmatcher
 {
 public:
-    Patchmatcher();
+    Patchmatcher(int width, int height);
 
-    std::vector<std::pair<int, float>> errors;
+    std::vector<std::pair<int, double>> errors;
 
     void random_search(NNF_t& NNF, const Image& src, const Image& tgt, Vector2i xy);
 
@@ -22,6 +22,9 @@ public:
 
     double mu = 2;
 };
+
+double Energy(const std::vector<VectorXf*>& A, const std::vector<VectorXf*>& B,
+              const VectorXf& Aprime, const VectorXf& Bprime, double mu);
 
 double Distance(const VectorXf& A, const VectorXf& B);
 

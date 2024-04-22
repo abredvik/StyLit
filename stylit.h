@@ -12,27 +12,23 @@ class Stylit
 {
 public:
 
-    Stylit(int source_width, int source_height, int target_width, int target_height,
-           std::vector<RGBA> source_color_rbgs, std::vector<RGBA> source_LPE1_rbgs, std::vector<RGBA> source_LPE2_rbgs, std::vector<RGBA> source_LPE3_rbgs,
-           std::vector<RGBA> target_color_rbgs, std::vector<RGBA> target_LPE1_rbgs, std::vector<RGBA> target_LPE2_rbgs, std::vector<RGBA> target_LPE3_rbgs,
-           std::vector<RGBA> source_style_rbgs);
-
-    Image source_image;
-    Image target_image;
+    Stylit();
 
     NNF_t final_NNF;
 
     std::vector<RGBA> output;
 
-    void stylit_algorithm();
+    void stylit_algorithm(const Image& src, Image& tgt);
 
-    std::pair<int, float> calculate_error_budget();
+    int calculate_error_budget(std::vector<std::pair<int, double>> &errors);
 
-    void fill_gaps();
+    void resolve_unmatched(const Image& src, Image& tgt);
 
     void average(int index);
 
-    std::vector<RGBA> run(int iterations);
+    std::vector<RGBA> run(const Image& src, Image& tgt, int iterations);
+
+    Vector2i nearest_neighbor(const Image& src, std::vector<VectorXf*> tgt_patches, const VectorXf& tgt_style, Vector2i xy);
 };
 
 void init_image(const std::vector<QString>& filepath, Image& img);
