@@ -314,10 +314,14 @@ NNF_t Patchmatcher::patch_match(const Image& src, const Image& tgt) {
     return NNF;
 }
 
-std::vector<RGBA> Patchmatcher::recreate_image(NNF_t NNF, const std::vector<RGBA>& target, int width) {
-    std::vector<RGBA> reconstruction(target.size());
-    for (int i = 0; i < target.size(); ++i) {
-        reconstruction[i] = target[pos_to_index(index_to_position(i, width) + NNF[i], width)];
+std::vector<RGBA> recreate_image(NNF_t NNF, const Image& target) {
+    std::vector<RGBA> reconstruction(target.width * target.height);
+    for (int i = 0; i < reconstruction.size(); ++i) {
+        double r, g, b;
+        r = target.patches_orignal[pos_to_index(index_to_position(i, target.width) + NNF[i], target.width)]->buffer[37];
+        g = target.patches_orignal[pos_to_index(index_to_position(i, target.width) + NNF[i], target.width)]->buffer[38];
+        b = target.patches_orignal[pos_to_index(index_to_position(i, target.width) + NNF[i], target.width)]->buffer[39];
+        reconstruction[i] = RGBA{ float_to_int(r), float_to_int(g), float_to_int(b) };
     }
     return reconstruction;
 }
