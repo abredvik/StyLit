@@ -11,16 +11,6 @@
 #include "Eigen/Dense"
 using namespace Eigen;
 
-void verify_patches(const Image& img) {
-    for (int i = 0; i < img.patches_original.size(); ++i) {
-//        std::cout << "after:" << std::endl;
-        verify_patch(img.patches_original[i]);
-        verify_patch(img.patches_LPE1[i]);
-        verify_patch(img.patches_LPE2[i]);
-        verify_patch(img.patches_LPE3[i]);
-    }
-}
-
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
@@ -34,7 +24,6 @@ int main(int argc, char *argv[])
     // Check for invalid argument count
     const QStringList args = parser.positionalArguments();
     if (args.size() < 1) {
-//        printf("Not enough arguments. Please provide a path to a config file (.ini) as a command-line argument.\n");
         std::cout << "Not enough arguments. Please provide a path to a config file (.ini) as a command-line argument." << std::endl;
         a.exit(1);
         return 1;
@@ -66,34 +55,6 @@ int main(int argc, char *argv[])
     Image srcImg, tgtImg;
     init_image(srcPaths, srcImg);
     init_image(tgtPaths, tgtImg);
-
-//    std::cout << "Source:" << std::endl;
-//    verify_patches(srcImg);
-//    std::cout << "Target:" << std::endl;
-//    verify_patches(tgtImg);
-
-    //Patchmatcher patchMatcher;
-
-    //NNF_t NNF = patchMatcher.patch_match(srcImg, tgtImg);
-
-    //std::vector<RGBA> reconstruction = recreate_image(NNF, tgtImg);
-
-    //saveImageToFile("Output/RECONSTRUCTION.png", reconstruction, tgtImg.width, tgtImg.height);
-
-//    int target_width;
-//    int target_height;
-
-//    std::vector<RGBA> source_color_rbgs;
-//    std::vector<RGBA> source_LPE1_rbgs;
-//    std::vector<RGBA> source_LPE2_rbgs;
-//    std::vector<RGBA> source_LPE3_rbgs;
-
-//    std::vector<RGBA> target_color_rbgs;
-//    std::vector<RGBA> target_LPE1_rbgs;
-//    std::vector<RGBA> target_LPE2_rbgs;
-//    std::vector<RGBA> target_LPE3_rbgs;
-
-//    std::vector<RGBA> source_style_rbgs;
 
     Stylit stylit;
 

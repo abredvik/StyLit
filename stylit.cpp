@@ -8,7 +8,6 @@ Stylit::Stylit()
 
     //TO DO: initialize stuff
 
-
 }
 
 void init_image(const std::vector<QString>& filenames, Image& img) {
@@ -71,7 +70,6 @@ void Stylit::stylit_algorithm(const Image& src, Image& tgt){
         NNF_t temp_NNF = patchmatcher.patch_match(src, tgt, unmatched);
         int k = 0.7 * patchmatcher.errors.size();//calculate_error_budget(patchmatcher.errors);
 
-//        std::cout << k << std::endl;
         for (int i = 0; i < k; i++){
             int source_index = patchmatcher.errors[i].first;
 
@@ -81,7 +79,7 @@ void Stylit::stylit_algorithm(const Image& src, Image& tgt){
                 continue;
             }
 
-            targets_covered ++;
+            targets_covered++;
             unmatched.erase(target_index);
             tgt.patches_original[target_index]->is_matched = true;
             tgt.patches_LPE1[target_index]->is_matched = true;
@@ -142,7 +140,6 @@ void Stylit::resolve_unmatched(const Image& src, Image& tgt, std::unordered_set<
     int j = 0;
 #pragma omp parallel for
     for (const int& i : unmatched) {
-        // TO DO: write nearest_neighbor()
         std::vector<VectorXf*> tgt_patches(4);
         tgt_patches[0] = &(tgt.patches_original[i]->buffer);
         tgt_patches[1] = &(tgt.patches_LPE1[i]->buffer);
@@ -162,25 +159,6 @@ void Stylit::resolve_unmatched(const Image& src, Image& tgt, std::unordered_set<
         final_NNF[source_index] = nearest_neighbor_offset;
         final_reverse_NNF[i] = -final_NNF[source_index];
     }
-
-
-//    for(int i = 0; i < tgt.patches_original.size(); i++){
-//        if(!(tgt.patches_original[i]->is_matched)){
-//            // TO DO: write nearest_neighbor()
-//            std::vector<VectorXf*> tgt_patches(4);
-//            tgt_patches[0] = &(tgt.patches_original[i]->buffer);
-//            tgt_patches[1] = &(tgt.patches_LPE1[i]->buffer);
-//            tgt_patches[2] = &(tgt.patches_LPE2[i]->buffer);
-//            tgt_patches[3] = &(tgt.patches_LPE3[i]->buffer);
-//            const VectorXf& tgt_style = tgt.patches_stylized[i]->buffer;
-
-//            Vector2i nearest_neighbor_offset = nearest_neighbor(src, tgt_patches, tgt_style, index_to_position(i, tgt.width));
-//            int source_index = pos_to_index(index_to_position(i, tgt.width) - nearest_neighbor_offset, src.width);
-
-//            final_NNF[source_index] = nearest_neighbor_offset;
-//            final_reverse_NNF[i] = -final_NNF[source_index];
-//        }
-//    }
 }
 
 Vector2i Stylit::nearest_neighbor(const Image& src, std::vector<VectorXf*> tgt_patches, const VectorXf& tgt_style, Vector2i xy) {
