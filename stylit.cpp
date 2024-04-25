@@ -1,5 +1,8 @@
 #include "stylit.h"
 
+#include <iostream>
+#include <fstream>
+
 Stylit::Stylit()
 {
 
@@ -29,13 +32,13 @@ void init_image(const std::vector<QString>& filenames, Image& img) {
 }
 
 std::vector<RGBA> Stylit::run(const Image& src, Image& tgt, int iterations){
-    for(int i = 0; i < iterations; i++){
+//    for(int i = 0; i < iterations; i++){
         stylit_algorithm(src, tgt);
-    }
+//    }
 
     std::vector<RGBA> output(tgt.patches_stylized.size());
 
-    for(int j = 0; tgt.patches_stylized.size(); j ++){
+    for(int j = 0; j < tgt.patches_stylized.size(); ++j){
         float r, g, b;
         r = tgt.patches_stylized[j]->buffer[36];
         g = tgt.patches_stylized[j]->buffer[37];
@@ -54,11 +57,22 @@ void Stylit::stylit_algorithm(const Image& src, Image& tgt){
     int total_targets = tgt.patches_original.size();
     float percent_coverage = 0.f;
 
-    while(percent_coverage < 0.95f){
-        NNF_t temp_NNF = patchmatcher.patch_match(src, tgt);
-        int k = calculate_error_budget(patchmatcher.errors);
+    std::unordered_set<int> unmatched;
+    for (int i = 0; i < tgt.patches_original.size(); ++i) {
+        tgt.patches_original[i]->is_matched = false;
+        tgt.patches_LPE1[i]->is_matched = false;
+        tgt.patches_LPE2[i]->is_matched = false;
+        tgt.patches_LPE3[i]->is_matched = false;
+        tgt.patches_stylized[i]->is_matched = false;
+        unmatched.insert(i);
+    }
 
-        for (int i = 0; i < k; i ++){
+    while(percent_coverage < 0.95f){
+        NNF_t temp_NNF = patchmatcher.patch_match(src, tgt, unmatched);
+        int k = 0.7 * patchmatcher.errors.size();//calculate_error_budget(patchmatcher.errors);
+
+//        std::cout << k << std::endl;
+        for (int i = 0; i < k; i++){
             int source_index = patchmatcher.errors[i].first;
 
             int target_index = pos_to_index(temp_NNF[source_index] + index_to_position(source_index, src.width), tgt.width);
@@ -68,6 +82,7 @@ void Stylit::stylit_algorithm(const Image& src, Image& tgt){
             }
 
             targets_covered ++;
+            unmatched.erase(target_index);
             tgt.patches_original[target_index]->is_matched = true;
             tgt.patches_LPE1[target_index]->is_matched = true;
             tgt.patches_LPE2[target_index]->is_matched = true;
@@ -78,13 +93,23 @@ void Stylit::stylit_algorithm(const Image& src, Image& tgt){
         }
 
         percent_coverage = (float) targets_covered / (float) total_targets;
+
+        std::cout << percent_coverage << std::endl;
+
+//        for(int i = 0; i < (tgt.width * tgt.height); i ++){
+//            if (tgt.patches_original[i]->is_matched)
+//                average(i, src, tgt);
+//        }
+
     }
 
-    resolve_unmatched(src, tgt);
+    resolve_unmatched(src, tgt, unmatched);
 
     for(int i = 0; i < (tgt.width * tgt.height); i ++){
-        average(i, src, tgt);
+        if (tgt.patches_original[i]->is_matched)
+            average(i, src, tgt);
     }
+
 
 }
 
@@ -108,29 +133,54 @@ int Stylit::calculate_error_budget(std::vector<std::pair<int, double>> &errors){
     Vector2d result = l_matrix.colPivHouseholderQr().solve(b_vector);
     double a = result(0);
     double b = result(1);
-    int k = errors.size() * (sqrt(1.0 / b) + (a / b));
+    int k = errors.size() * (-sqrt(1.0 / b) + (a / b));
 
     return k;
 }
 
-void Stylit::resolve_unmatched(const Image& src, Image& tgt) {
-    for(int i = 0; i < tgt.patches_original.size(); i++){
-        if(!tgt.patches_original[i]->is_matched){
-            // TO DO: write nearest_neighbor()
-            std::vector<VectorXf*> tgt_patches(4);
-            tgt_patches[0] = &(tgt.patches_original[i]->buffer);
-            tgt_patches[1] = &(tgt.patches_LPE1[i]->buffer);
-            tgt_patches[2] = &(tgt.patches_LPE2[i]->buffer);
-            tgt_patches[3] = &(tgt.patches_LPE3[i]->buffer);
-            const VectorXf& tgt_style = tgt.patches_stylized[i]->buffer;
+void Stylit::resolve_unmatched(const Image& src, Image& tgt, std::unordered_set<int> unmatched) {
+    int j = 0;
+#pragma omp parallel for
+    for (const int& i : unmatched) {
+        // TO DO: write nearest_neighbor()
+        std::vector<VectorXf*> tgt_patches(4);
+        tgt_patches[0] = &(tgt.patches_original[i]->buffer);
+        tgt_patches[1] = &(tgt.patches_LPE1[i]->buffer);
+        tgt_patches[2] = &(tgt.patches_LPE2[i]->buffer);
+        tgt_patches[3] = &(tgt.patches_LPE3[i]->buffer);
+        const VectorXf& tgt_style = tgt.patches_stylized[i]->buffer;
 
-            Vector2i nearest_neighbor_offset = nearest_neighbor(src, tgt_patches, tgt_style, index_to_position(i, tgt.width));
-            int source_index = pos_to_index(index_to_position(i, tgt.width) - nearest_neighbor_offset, src.width);
+        Vector2i nearest_neighbor_offset = nearest_neighbor(src, tgt_patches, tgt_style, index_to_position(i, tgt.width));
+        int source_index = pos_to_index(index_to_position(i, tgt.width) - nearest_neighbor_offset, src.width);
 
-            final_NNF[source_index] = nearest_neighbor_offset;
-            final_reverse_NNF[i] = -final_NNF[source_index];
-        }
+        std::cout << "\r" << ++j << " / " << unmatched.size() << std::flush;
+
+        tgt.patches_original[i]->is_matched = true;
+        tgt.patches_LPE1[i]->is_matched = true;
+        tgt.patches_LPE2[i]->is_matched = true;
+        tgt.patches_LPE3[i]->is_matched = true;
+        final_NNF[source_index] = nearest_neighbor_offset;
+        final_reverse_NNF[i] = -final_NNF[source_index];
     }
+
+
+//    for(int i = 0; i < tgt.patches_original.size(); i++){
+//        if(!(tgt.patches_original[i]->is_matched)){
+//            // TO DO: write nearest_neighbor()
+//            std::vector<VectorXf*> tgt_patches(4);
+//            tgt_patches[0] = &(tgt.patches_original[i]->buffer);
+//            tgt_patches[1] = &(tgt.patches_LPE1[i]->buffer);
+//            tgt_patches[2] = &(tgt.patches_LPE2[i]->buffer);
+//            tgt_patches[3] = &(tgt.patches_LPE3[i]->buffer);
+//            const VectorXf& tgt_style = tgt.patches_stylized[i]->buffer;
+
+//            Vector2i nearest_neighbor_offset = nearest_neighbor(src, tgt_patches, tgt_style, index_to_position(i, tgt.width));
+//            int source_index = pos_to_index(index_to_position(i, tgt.width) - nearest_neighbor_offset, src.width);
+
+//            final_NNF[source_index] = nearest_neighbor_offset;
+//            final_reverse_NNF[i] = -final_NNF[source_index];
+//        }
+//    }
 }
 
 Vector2i Stylit::nearest_neighbor(const Image& src, std::vector<VectorXf*> tgt_patches, const VectorXf& tgt_style, Vector2i xy) {

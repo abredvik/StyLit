@@ -12,13 +12,13 @@ public:
 
     void random_search(NNF_t& NNF, const Image& src, const Image& tgt, Vector2i xy);
 
-    void randomize_NNF(NNF_t& NNF, int imgSize, int width, int height);
+    void randomize_NNF(NNF_t& NNF, int srcSize, int srcWidth, int tgtWidth, std::unordered_set<int>& prev_map);
 
     void propagate_odd(NNF_t& NNF, const Image& src, const Image& tgt, Vector2i xy);
 
     void propagate_even(NNF_t& NNF, const Image& src, const Image& tgt, Vector2i xy);
 
-    NNF_t patch_match(const Image& src, const Image& tgt);
+    NNF_t patch_match(const Image& src, const Image& tgt, std::unordered_set<int>& prev_map);
 
     double mu = 2;
 };
@@ -31,5 +31,7 @@ double Distance(const VectorXf& A, const VectorXf& B);
 std::vector<Patch*> get_patches(const std::vector<RGBA>& img, int width, int height);
 
 std::vector<RGBA> recreate_image(NNF_t NNF, const Image& target);
+
+void verify_patch(Patch *patch);
 
 #endif // PATCHMATCH_H

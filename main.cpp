@@ -11,6 +11,16 @@
 #include "Eigen/Dense"
 using namespace Eigen;
 
+void verify_patches(const Image& img) {
+    for (int i = 0; i < img.patches_original.size(); ++i) {
+//        std::cout << "after:" << std::endl;
+        verify_patch(img.patches_original[i]);
+        verify_patch(img.patches_LPE1[i]);
+        verify_patch(img.patches_LPE2[i]);
+        verify_patch(img.patches_LPE3[i]);
+    }
+}
+
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
@@ -51,11 +61,16 @@ int main(int argc, char *argv[])
     tgtPaths.push_back(tgtFolder + "/LPE1.bmp");
     tgtPaths.push_back(tgtFolder + "/LPE2.bmp");
     tgtPaths.push_back(tgtFolder + "/LPE3.bmp");
-    tgtPaths.push_back(tgtFolder + "/color.bmp");
+    tgtPaths.push_back(tgtFolder + "/black_square.bmp");
 
     Image srcImg, tgtImg;
     init_image(srcPaths, srcImg);
     init_image(tgtPaths, tgtImg);
+
+//    std::cout << "Source:" << std::endl;
+//    verify_patches(srcImg);
+//    std::cout << "Target:" << std::endl;
+//    verify_patches(tgtImg);
 
     //Patchmatcher patchMatcher;
 
@@ -82,7 +97,7 @@ int main(int argc, char *argv[])
 
     Stylit stylit;
 
-    stylit.run(srcImg, tgtImg, 2);
+    saveImageToFile("Output/RECONSTRUCTION.png", stylit.run(srcImg, tgtImg, 2), tgtImg.width, tgtImg.height);
 
     MainWindow w;
     w.show();

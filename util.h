@@ -5,6 +5,8 @@
 #include <QString>
 #include <iostream>
 
+#include <unordered_set>
+
 #include "rgba.h"
 
 #include "Eigen/Dense"
