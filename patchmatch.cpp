@@ -20,10 +20,14 @@ std::vector<Patch*> get_patches(const std::vector<RGBA>& img, int width, int hei
     int window_width = 5;
     int w = window_width / 2;
 
-//#pragma omp parallel for
     for (int p = 0; p < img.size(); ++p) {
-        Patch *patch = new Patch();
-        patch->buffer = VectorXf(3 * window_width * window_width);
+        result[p] = new Patch();
+        result[p]->buffer = VectorXf(3 * window_width * window_width);
+    }
+
+#pragma omp parallel for
+    for (int p = 0; p < img.size(); ++p) {
+        Patch *patch = result[p];
         patch->coordinates = index_to_position(p, width);
         patch->neighbor_patches.reserve(window_width * window_width);
         patch->is_matched = false;
@@ -49,8 +53,6 @@ std::vector<Patch*> get_patches(const std::vector<RGBA>& img, int width, int hei
                 }
             }
         }
-
-        result[p] = patch;
     }
 
     return result;

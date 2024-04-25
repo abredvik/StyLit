@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.5)
 
 project(StyLit VERSION 0.1 LANGUAGES CXX)
 
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
@@ -79,6 +81,12 @@ endif()
 target_include_directories(${PROJECT_NAME} PRIVATE
     Eigen
 )
+
+#include openmp
+find_package(OpenMP)
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(${PROJECT_NAME} PUBLIC OpenMP::OpenMP_CXX)
+endif()
 
 if(QT_VERSION_MAJOR EQUAL 6)
     qt_finalize_executable(StyLit)

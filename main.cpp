@@ -6,7 +6,6 @@
 
 #include "util.h"
 #include "stylit.h"
-#include "patchmatch.h"
 
 #include "Eigen/Dense"
 using namespace Eigen;

@@ -22,7 +22,7 @@ public:
 
     int calculate_error_budget(std::vector<std::pair<int, double>> &errors);
 
-    void resolve_unmatched(const Image& src, Image& tgt, std::unordered_set<int> unmatched);
+    void resolve_unmatched(const Image& src, Image& tgt, const std::unordered_set<int>& unmatched);
 
     void average(int index, const Image& src, Image& tgt);
 

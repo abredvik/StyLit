@@ -103,6 +103,7 @@ void Stylit::stylit_algorithm(const Image& src, Image& tgt){
 
     resolve_unmatched(src, tgt, unmatched);
 
+#pragma omp parallel for
     for(int i = 0; i < (tgt.width * tgt.height); i ++){
         if (tgt.patches_original[i]->is_matched)
             average(i, src, tgt);
@@ -122,6 +123,7 @@ int Stylit::calculate_error_budget(std::vector<std::pair<int, double>> &errors){
     MatrixX2d l_matrix(errors.size(), 2);
     VectorXd b_vector(errors.size());
     double max_error = errors[errors.size() - 1].second;
+#pragma omp parallel for
     for (int i = 0; i < errors.size(); ++i) {
         l_matrix(i, 0) = 1.0;
         l_matrix(i, 1) = -1.0 * ((double)i / (double)errors.size());
@@ -136,35 +138,33 @@ int Stylit::calculate_error_budget(std::vector<std::pair<int, double>> &errors){
     return k;
 }
 
-void Stylit::resolve_unmatched(const Image& src, Image& tgt, std::unordered_set<int> unmatched) {
-    int j = 0;
-#pragma omp parallel for
-    for (const int& i : unmatched) {
-        std::vector<VectorXf*> tgt_patches(4);
-        tgt_patches[0] = &(tgt.patches_original[i]->buffer);
-        tgt_patches[1] = &(tgt.patches_LPE1[i]->buffer);
-        tgt_patches[2] = &(tgt.patches_LPE2[i]->buffer);
-        tgt_patches[3] = &(tgt.patches_LPE3[i]->buffer);
-        const VectorXf& tgt_style = tgt.patches_stylized[i]->buffer;
+void Stylit::resolve_unmatched(const Image& src, Image& tgt, const std::unordered_set<int>& unmatched) {
+    for (int i = 0; i < tgt.patches_original.size(); ++i) {
+        if (!tgt.patches_original[i]->is_matched) {
+            std::vector<VectorXf*> tgt_patches(4);
+            tgt_patches[0] = &(tgt.patches_original[i]->buffer);
+            tgt_patches[1] = &(tgt.patches_LPE1[i]->buffer);
+            tgt_patches[2] = &(tgt.patches_LPE2[i]->buffer);
+            tgt_patches[3] = &(tgt.patches_LPE3[i]->buffer);
+            const VectorXf& tgt_style = tgt.patches_stylized[i]->buffer;
 
-        Vector2i nearest_neighbor_offset = nearest_neighbor(src, tgt_patches, tgt_style, index_to_position(i, tgt.width));
-        int source_index = pos_to_index(index_to_position(i, tgt.width) - nearest_neighbor_offset, src.width);
+            Vector2i nearest_neighbor_offset = nearest_neighbor(src, tgt_patches, tgt_style, index_to_position(i, tgt.width));
+            int source_index = pos_to_index(index_to_position(i, tgt.width) - nearest_neighbor_offset, src.width);
 
-        std::cout << "\r" << ++j << " / " << unmatched.size() << std::flush;
-
-        tgt.patches_original[i]->is_matched = true;
-        tgt.patches_LPE1[i]->is_matched = true;
-        tgt.patches_LPE2[i]->is_matched = true;
-        tgt.patches_LPE3[i]->is_matched = true;
-        final_NNF[source_index] = nearest_neighbor_offset;
-        final_reverse_NNF[i] = -final_NNF[source_index];
+            tgt.patches_original[i]->is_matched = true;
+            tgt.patches_LPE1[i]->is_matched = true;
+            tgt.patches_LPE2[i]->is_matched = true;
+            tgt.patches_LPE3[i]->is_matched = true;
+            final_NNF[source_index] = nearest_neighbor_offset;
+            final_reverse_NNF[i] = -final_NNF[source_index];
+        }
     }
 }
 
 Vector2i Stylit::nearest_neighbor(const Image& src, std::vector<VectorXf*> tgt_patches, const VectorXf& tgt_style, Vector2i xy) {
     double min_energy = std::numeric_limits<double>::infinity();
     Vector2i nearest;
-
+#pragma omp parallel for
     for (int i = 0; i < src.patches_original.size(); ++i) {
         std::vector<VectorXf*> src_patches(4);
         const VectorXf& src_stylized_patch = src.patches_stylized[i]->buffer;
