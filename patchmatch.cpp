@@ -1,6 +1,7 @@
 #include "patchmatch.h"
 
 #include <random>
+#include <unordered_set>
 
 Patchmatcher::Patchmatcher(int width, int height) : errors(width * height) {}
 
@@ -15,14 +16,18 @@ Patchmatcher::Patchmatcher(int width, int height) : errors(width * height) {}
 std::vector<Patch*> get_patches(const std::vector<RGBA>& img, int width, int height) {
     // return a bunch of 5 by 5 (or representation of) patches
     // one for each pixel
-    std::vector<Patch*> result;
-    result.reserve(img.size());
+    std::vector<Patch*> result(img.size());
     int window_width = 5;
     int w = window_width / 2;
 
     for (int p = 0; p < img.size(); ++p) {
-        Patch *patch = new Patch();
-        patch->buffer = VectorXf(3 * window_width * window_width);
+        result[p] = new Patch();
+        result[p]->buffer = VectorXf(3 * window_width * window_width);
+    }
+
+#pragma omp parallel for
+    for (int p = 0; p < img.size(); ++p) {
+        Patch *patch = result[p];
         patch->coordinates = index_to_position(p, width);
         patch->neighbor_patches.reserve(window_width * window_width);
         patch->is_matched = false;
@@ -30,8 +35,8 @@ std::vector<Patch*> get_patches(const std::vector<RGBA>& img, int width, int hei
         const Vector2i& xy = patch->coordinates;
         int row = xy[1], col = xy[0];
 
-        for (int i = row - w; i < row + w; ++i) {
-            for (int j = col - w; j < col + w; ++j) {
+        for (int i = row - w; i <= row + w; ++i) {
+            for (int j = col - w; j <= col + w; ++j) {
                 int patch_index = 3 * pos_to_index(Vector2i(j - col + w, i - row + w), window_width);
                 if (i < 0 || i >= height || j < 0 || j >= width) {
                     const RGBA& center = img[pos_to_index(Vector2i(col, row), width)];
@@ -48,8 +53,6 @@ std::vector<Patch*> get_patches(const std::vector<RGBA>& img, int width, int hei
                 }
             }
         }
-
-        result.push_back(patch);
     }
 
     return result;
@@ -57,17 +60,17 @@ std::vector<Patch*> get_patches(const std::vector<RGBA>& img, int width, int hei
 }
 
 double Distance(const VectorXf& A, const VectorXf& B) {
-//    return (|| A'(p) - B'(q) ||)^2 + mu (|| A(p) - B(q) ||)^2
-    return (B - A).norm();
+    return (B - A).squaredNorm();
 }
 
 double Energy(const std::vector<VectorXf*>& A, const std::vector<VectorXf*>& B,
               const VectorXf& Aprime, const VectorXf& Bprime, double mu) {
+//    return (|| A'(p) - B'(q) ||)^2 + mu (|| A(p) - B(q) ||)^2
     double result = 0.0;
     for (int i = 0; i < 4; ++i) {
-        result += Distance(Aprime, Bprime) + mu * Distance(*A[i], *B[i]);
+        result += mu * Distance(*A[i], *B[i]);
     }
-    return result;
+    return (result / 4.0) + Distance(Aprime, Bprime);
 }
 
 std::random_device                      rand_dev;
@@ -112,7 +115,7 @@ void Patchmatcher::random_search(NNF_t& NNF, const Image& src, const Image& tgt,
         candidate_patches[3] = &(tgt.patches_LPE3[candidate_index]->buffer);
         double candidate_energy = Energy(src_patches, candidate_patches, src_stylized_patch, candidate_stylized_patch, mu);
 
-        if (candidate_energy < final_energy){
+        if (candidate_energy < final_energy && !(tgt.patches_stylized[candidate_index]->is_matched)){
             v0 = newCoord - xy;
             final_patches = candidate_patches;
             final_energy = candidate_energy;
@@ -125,10 +128,17 @@ void Patchmatcher::random_search(NNF_t& NNF, const Image& src, const Image& tgt,
     errors[src_index] = std::make_pair(src_index, final_energy);
 }
 
-void Patchmatcher::randomize_NNF(NNF_t& NNF, int imgSize, int width, int height) {
-    for (int i = 0; i < imgSize; ++i) {
-        Vector2i xy = index_to_position(i, width);
-        Vector2i newXY(rand() % width, rand() % height);
+int random_pick(const std::unordered_set<int>& unmatched) {
+    auto it = unmatched.begin();
+    int n = rand() % unmatched.size();
+    std::advance(it, n);
+    return *it;
+}
+
+void Patchmatcher::randomize_NNF(NNF_t& NNF, int srcSize, int srcWidth, int tgtWidth, std::unordered_set<int>& unmatched) {
+    for (int i = 0; i < srcSize; ++i) {
+        Vector2i xy = index_to_position(i, srcWidth);
+        Vector2i newXY = index_to_position(random_pick(unmatched), tgtWidth);
         NNF[i] = (newXY - xy);
     }
 }
@@ -169,6 +179,7 @@ void Patchmatcher::propagate_odd(NNF_t& NNF, const Image& src, const Image& tgt,
             tgt_left_patches[1] = &(tgt.patches_LPE1[tgt_left_index]->buffer);
             tgt_left_patches[2] = &(tgt.patches_LPE2[tgt_left_index]->buffer);
             tgt_left_patches[3] = &(tgt.patches_LPE3[tgt_left_index]->buffer);
+            if (tgt.patches_original[tgt_left_index]->is_matched) left_valid = false;
         } else {
             left_valid = false;
         }
@@ -187,6 +198,7 @@ void Patchmatcher::propagate_odd(NNF_t& NNF, const Image& src, const Image& tgt,
             tgt_top_patches[1] = &(tgt.patches_LPE1[tgt_top_index]->buffer);
             tgt_top_patches[2] = &(tgt.patches_LPE2[tgt_top_index]->buffer);
             tgt_top_patches[3] = &(tgt.patches_LPE3[tgt_top_index]->buffer);
+            if (tgt.patches_original[tgt_top_index]->is_matched) top_valid = false;
         } else {
             top_valid = false;
         }
@@ -247,6 +259,7 @@ void Patchmatcher::propagate_even(NNF_t& NNF, const Image& src, const Image& tgt
             tgt_right_patches[1] = &(tgt.patches_LPE1[tgt_right_index]->buffer);
             tgt_right_patches[2] = &(tgt.patches_LPE2[tgt_right_index]->buffer);
             tgt_right_patches[3] = &(tgt.patches_LPE3[tgt_right_index]->buffer);
+            if (tgt.patches_original[tgt_right_index]->is_matched) right_valid = false;
         } else {
             right_valid = false;
         }
@@ -265,6 +278,7 @@ void Patchmatcher::propagate_even(NNF_t& NNF, const Image& src, const Image& tgt
             tgt_bottom_patches[1] = &(tgt.patches_LPE1[tgt_bottom_index]->buffer);
             tgt_bottom_patches[2] = &(tgt.patches_LPE2[tgt_bottom_index]->buffer);
             tgt_bottom_patches[3] = &(tgt.patches_LPE3[tgt_bottom_index]->buffer);
+            if (tgt.patches_original[tgt_bottom_index]->is_matched) bottom_valid = false;
         } else {
             bottom_valid = false;
         }
@@ -289,13 +303,13 @@ void Patchmatcher::propagate_even(NNF_t& NNF, const Image& src, const Image& tgt
     }
 }
 
-NNF_t Patchmatcher::patch_match(const Image& src, const Image& tgt) {
+NNF_t Patchmatcher::patch_match(const Image& src, const Image& tgt, std::unordered_set<int>& available_patches) {
     // fill NNF randomly
     NNF_t NNF;
     int imgSize = src.patches_original.size();
-    int numIterations = 1;
+    int numIterations = 6;
 
-    randomize_NNF(NNF, imgSize, src.width, src.height);
+    randomize_NNF(NNF, imgSize, src.width, tgt.width, available_patches);
 
     for (int iteration = 1; iteration <= numIterations; ++iteration) {
         if (iteration % 2) {

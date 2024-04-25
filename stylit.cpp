@@ -1,10 +1,12 @@
 #include "stylit.h"
 
+#include <iostream>
+#include <fstream>
+
 Stylit::Stylit()
 {
 
     //TO DO: initialize stuff
-
 
 }
 
@@ -30,23 +32,14 @@ void init_image(const std::vector<QString>& filenames, Image& img) {
 
 std::vector<RGBA> Stylit::run(const Image& src, Image& tgt, int iterations){
 //    for(int i = 0; i < iterations; i++){
-//        stylit_algorithm(src, tgt);
-//    }
-
-    while(percent_coverage < 0.7f){
-        std::cout << percent_coverage << std::endl;
         stylit_algorithm(src, tgt);
-
-        for(int i = 0; i < (tgt.width * tgt.height); i ++){
-            average(i, src, tgt);
-        }
-    }
+//    }
 
     resolve_unmatched(src, tgt);
 
     std::vector<RGBA> output(tgt.patches_stylized.size());
 
-    for(int j = 0; tgt.patches_stylized.size(); j ++){
+    for(int j = 0; j < tgt.patches_stylized.size(); ++j){
         float r, g, b;
         r = tgt.patches_stylized[j]->buffer[36];
         g = tgt.patches_stylized[j]->buffer[37];
@@ -62,28 +55,58 @@ void Stylit::stylit_algorithm(const Image& src, Image& tgt){
     Patchmatcher patchmatcher(src.width, src.height);
     int total_targets = tgt.patches_original.size();
 
-    NNF_t temp_NNF = patchmatcher.patch_match(src, tgt);
-    int k = calculate_error_budget(patchmatcher.errors);
-
-    for (int i = 0; i < k; i ++){
-        int source_index = patchmatcher.errors[i].first;
-
-        int target_index = pos_to_index(temp_NNF[source_index] + index_to_position(source_index, src.width), tgt.width);
-
-        if(tgt.patches_original[target_index]->is_matched){
-            continue;
-        }
-
-        targets_covered ++;
-        tgt.patches_original[target_index]->is_matched = true;
-        tgt.patches_LPE1[target_index]->is_matched = true;
-        tgt.patches_LPE2[target_index]->is_matched = true;
-        tgt.patches_LPE3[target_index]->is_matched = true;
-        final_NNF[source_index] = temp_NNF[source_index];
-        final_reverse_NNF[target_index] = -temp_NNF[source_index];
+    std::unordered_set<int> unmatched;
+    for (int i = 0; i < tgt.patches_original.size(); ++i) {
+        tgt.patches_original[i]->is_matched = false;
+        tgt.patches_LPE1[i]->is_matched = false;
+        tgt.patches_LPE2[i]->is_matched = false;
+        tgt.patches_LPE3[i]->is_matched = false;
+        tgt.patches_stylized[i]->is_matched = false;
+        unmatched.insert(i);
     }
 
-    percent_coverage = (float) targets_covered / (float) total_targets;
+    while(percent_coverage < 0.95f){
+        NNF_t temp_NNF = patchmatcher.patch_match(src, tgt, unmatched);
+        int k = 0.7 * patchmatcher.errors.size();//calculate_error_budget(patchmatcher.errors);
+
+        for (int i = 0; i < k; i++){
+            int source_index = patchmatcher.errors[i].first;
+
+            int target_index = pos_to_index(temp_NNF[source_index] + index_to_position(source_index, src.width), tgt.width);
+
+            if(tgt.patches_original[target_index]->is_matched){
+                continue;
+            }
+
+            targets_covered++;
+            unmatched.erase(target_index);
+            tgt.patches_original[target_index]->is_matched = true;
+            tgt.patches_LPE1[target_index]->is_matched = true;
+            tgt.patches_LPE2[target_index]->is_matched = true;
+            tgt.patches_LPE3[target_index]->is_matched = true;
+            final_NNF[source_index] = temp_NNF[source_index];
+            final_reverse_NNF[target_index] = -temp_NNF[source_index];
+
+        percent_coverage = (float) targets_covered / (float) total_targets;
+
+        std::cout << percent_coverage << std::endl;
+
+        }
+
+//        for(int i = 0; i < (tgt.width * tgt.height); i ++){
+//            if (tgt.patches_original[i]->is_matched)
+//                average(i, src, tgt);
+//        }
+
+    }
+
+    resolve_unmatched(src, tgt, unmatched);
+
+#pragma omp parallel for
+    for(int i = 0; i < (tgt.width * tgt.height); i ++){
+        if (tgt.patches_original[i]->is_matched)
+            average(i, src, tgt);
+    }
 
 }
 
@@ -98,6 +121,7 @@ int Stylit::calculate_error_budget(std::vector<std::pair<int, double>> &errors){
     MatrixX2d l_matrix(errors.size(), 2);
     VectorXd b_vector(errors.size());
     double max_error = errors[errors.size() - 1].second;
+#pragma omp parallel for
     for (int i = 0; i < errors.size(); ++i) {
         l_matrix(i, 0) = 1.0;
         l_matrix(i, 1) = -1.0 * ((double)i / (double)errors.size());
@@ -112,10 +136,9 @@ int Stylit::calculate_error_budget(std::vector<std::pair<int, double>> &errors){
     return k;
 }
 
-void Stylit::resolve_unmatched(const Image& src, Image& tgt) {
-    for(int i = 0; i < tgt.patches_original.size(); i++){
-        if(!tgt.patches_original[i]->is_matched){
-            // TO DO: write nearest_neighbor()
+void Stylit::resolve_unmatched(const Image& src, Image& tgt, const std::unordered_set<int>& unmatched) {
+    for (int i = 0; i < tgt.patches_original.size(); ++i) {
+        if (!tgt.patches_original[i]->is_matched) {
             std::vector<VectorXf*> tgt_patches(4);
             tgt_patches[0] = &(tgt.patches_original[i]->buffer);
             tgt_patches[1] = &(tgt.patches_LPE1[i]->buffer);
@@ -126,6 +149,10 @@ void Stylit::resolve_unmatched(const Image& src, Image& tgt) {
             Vector2i nearest_neighbor_offset = nearest_neighbor(src, tgt_patches, tgt_style, index_to_position(i, tgt.width));
             int source_index = pos_to_index(index_to_position(i, tgt.width) - nearest_neighbor_offset, src.width);
 
+            tgt.patches_original[i]->is_matched = true;
+            tgt.patches_LPE1[i]->is_matched = true;
+            tgt.patches_LPE2[i]->is_matched = true;
+            tgt.patches_LPE3[i]->is_matched = true;
             final_NNF[source_index] = nearest_neighbor_offset;
             final_reverse_NNF[i] = -final_NNF[source_index];
         }
@@ -135,7 +162,7 @@ void Stylit::resolve_unmatched(const Image& src, Image& tgt) {
 Vector2i Stylit::nearest_neighbor(const Image& src, std::vector<VectorXf*> tgt_patches, const VectorXf& tgt_style, Vector2i xy) {
     double min_energy = std::numeric_limits<double>::infinity();
     Vector2i nearest;
-
+#pragma omp parallel for
     for (int i = 0; i < src.patches_original.size(); ++i) {
         std::vector<VectorXf*> src_patches(4);
         const VectorXf& src_stylized_patch = src.patches_stylized[i]->buffer;

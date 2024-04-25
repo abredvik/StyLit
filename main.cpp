@@ -6,7 +6,6 @@
 
 #include "util.h"
 #include "stylit.h"
-#include "patchmatch.h"
 
 #include "Eigen/Dense"
 using namespace Eigen;
@@ -24,7 +23,6 @@ int main(int argc, char *argv[])
     // Check for invalid argument count
     const QStringList args = parser.positionalArguments();
     if (args.size() < 1) {
-//        printf("Not enough arguments. Please provide a path to a config file (.ini) as a command-line argument.\n");
         std::cout << "Not enough arguments. Please provide a path to a config file (.ini) as a command-line argument." << std::endl;
         a.exit(1);
         return 1;
@@ -51,34 +49,11 @@ int main(int argc, char *argv[])
     tgtPaths.push_back(tgtFolder + "/LPE1.bmp");
     tgtPaths.push_back(tgtFolder + "/LPE2.bmp");
     tgtPaths.push_back(tgtFolder + "/LPE3.bmp");
-    tgtPaths.push_back(tgtFolder + "/color.bmp");
+    tgtPaths.push_back(tgtFolder + "/black_square.bmp");
 
     Image srcImg, tgtImg;
     init_image(srcPaths, srcImg);
     init_image(tgtPaths, tgtImg);
-
-    //Patchmatcher patchMatcher;
-
-    //NNF_t NNF = patchMatcher.patch_match(srcImg, tgtImg);
-
-    //std::vector<RGBA> reconstruction = recreate_image(NNF, tgtImg);
-
-    //saveImageToFile("Output/RECONSTRUCTION.png", reconstruction, tgtImg.width, tgtImg.height);
-
-//    int target_width;
-//    int target_height;
-
-//    std::vector<RGBA> source_color_rbgs;
-//    std::vector<RGBA> source_LPE1_rbgs;
-//    std::vector<RGBA> source_LPE2_rbgs;
-//    std::vector<RGBA> source_LPE3_rbgs;
-
-//    std::vector<RGBA> target_color_rbgs;
-//    std::vector<RGBA> target_LPE1_rbgs;
-//    std::vector<RGBA> target_LPE2_rbgs;
-//    std::vector<RGBA> target_LPE3_rbgs;
-
-//    std::vector<RGBA> source_style_rbgs;
 
     Stylit stylit;
 
