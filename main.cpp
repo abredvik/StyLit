@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
     tgtPaths.push_back(tgtFolder + "/LPE1.bmp");
     tgtPaths.push_back(tgtFolder + "/LPE2.bmp");
     tgtPaths.push_back(tgtFolder + "/LPE3.bmp");
-    tgtPaths.push_back(tgtFolder + "/black_square.bmp");
+    tgtPaths.push_back("Data/Guy/black_square.bmp");
 
     Image srcImg, tgtImg;
     init_image(srcPaths, srcImg);
@@ -57,7 +57,13 @@ int main(int argc, char *argv[])
 
     Stylit stylit;
 
-    saveImageToFile("Output/RECONSTRUCTION.png", stylit.run(srcImg, tgtImg, 2), tgtImg.width, tgtImg.height);
+//    const QString& filename  = settings.value("style/filePath").toString();
+//    auto tup = loadImageFromFile(filename);
+//    std::vector<RGBA>& RGBimage = std::get<0>(tup);
+//    saveImageToFile("Output/Random.png", random_pixels(RGBimage), 256, 256);
+//    return 1;
+
+    saveImageToFile("Output/RECONSTRUCTION.png", stylit.run(srcImg, tgtImg, 1), tgtImg.width, tgtImg.height);
 
     MainWindow w;
     w.show();

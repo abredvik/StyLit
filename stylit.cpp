@@ -31,11 +31,9 @@ void init_image(const std::vector<QString>& filenames, Image& img) {
 }
 
 std::vector<RGBA> Stylit::run(const Image& src, Image& tgt, int iterations){
-//    for(int i = 0; i < iterations; i++){
+    for(int i = 0; i < iterations; i++){
         stylit_algorithm(src, tgt);
-//    }
-
-    resolve_unmatched(src, tgt);
+    }
 
     std::vector<RGBA> output(tgt.patches_stylized.size());
 
@@ -51,6 +49,10 @@ std::vector<RGBA> Stylit::run(const Image& src, Image& tgt, int iterations){
 }
 
 void Stylit::stylit_algorithm(const Image& src, Image& tgt){
+
+    int targets_covered = 0;
+
+    float percent_coverage = 0.f;
 
     Patchmatcher patchmatcher(src.width, src.height);
     int total_targets = tgt.patches_original.size();
@@ -89,9 +91,9 @@ void Stylit::stylit_algorithm(const Image& src, Image& tgt){
 
         percent_coverage = (float) targets_covered / (float) total_targets;
 
-        std::cout << percent_coverage << std::endl;
-
         }
+
+        std::cout << percent_coverage << std::endl;
 
 //        for(int i = 0; i < (tgt.width * tgt.height); i ++){
 //            if (tgt.patches_original[i]->is_matched)
@@ -102,11 +104,15 @@ void Stylit::stylit_algorithm(const Image& src, Image& tgt){
 
     resolve_unmatched(src, tgt, unmatched);
 
+    std::vector<RGBA> new_image(tgt.width * tgt.height);
 #pragma omp parallel for
     for(int i = 0; i < (tgt.width * tgt.height); i ++){
-        if (tgt.patches_original[i]->is_matched)
-            average(i, src, tgt);
+        if (tgt.patches_original[i]->is_matched){
+            new_image[i] = average(i, src, tgt);
+        }
     }
+
+    tgt.patches_stylized = get_patches(new_image, tgt.width, tgt.height);
 
 }
 
@@ -118,14 +124,15 @@ struct compare {
 
 int Stylit::calculate_error_budget(std::vector<std::pair<int, double>> &errors){
     std::sort(errors.begin(), errors.end(), compare());
-    MatrixX2d l_matrix(errors.size(), 2);
-    VectorXd b_vector(errors.size());
+    int step_size = errors.size() / 50;
+    MatrixX2d l_matrix(50, 2);
+    VectorXd b_vector(50);
     double max_error = errors[errors.size() - 1].second;
 #pragma omp parallel for
-    for (int i = 0; i < errors.size(); ++i) {
-        l_matrix(i, 0) = 1.0;
-        l_matrix(i, 1) = -1.0 * ((double)i / (double)errors.size());
-        b_vector(i) = 1.0 / (errors[i].second / max_error);
+    for (int i = 0; i < errors.size(); i += step_size) {
+        l_matrix(i / step_size, 0) = 1.0;
+        l_matrix(i / step_size, 1) = -1.0 * ((i / step_size) / 50.0);
+        b_vector(i / step_size) = 1.0 / (errors[i].second / max_error);
     }
 
     Vector2d result = l_matrix.colPivHouseholderQr().solve(b_vector);
@@ -181,12 +188,44 @@ Vector2i Stylit::nearest_neighbor(const Image& src, std::vector<VectorXf*> tgt_p
     return nearest;
 }
 
-void Stylit::average(int index, const Image& src, Image& tgt){
+RGBA Stylit::average(int index, const Image& src, Image& tgt){
 
-    Vector2i offset = final_reverse_NNF[index];
-    Vector2i xy = index_to_position(index, tgt.width);
-    int source_index = pos_to_index(xy + offset, src.width);
+    float r, g, b;
+    r = 0;
+    g = 0;
+    b = 0;
+    int j = 24;
 
-    tgt.patches_stylized[index]->buffer = src.patches_stylized[source_index]->buffer;
+    for(int neighbor_index : tgt.patches_original[index]->neighbor_patches){
+        Vector2i offset = final_reverse_NNF[neighbor_index];
+        Vector2i xy = index_to_position(neighbor_index, tgt.width);
+        int source_index = pos_to_index(xy + offset, src.width);
+        r += src.patches_stylized[source_index]->buffer[j * 3];
+        g += src.patches_stylized[source_index]->buffer[(j * 3) + 1];
+        b += src.patches_stylized[source_index]->buffer[(j * 3) + 2];
+        --j;
+    }
+    r = r / tgt.patches_original[index]->neighbor_patches.size();
+    g = g / tgt.patches_original[index]->neighbor_patches.size();
+    b = b / tgt.patches_original[index]->neighbor_patches.size();
+
+    return toRGBA(Vector3f(r, g, b));
+
+//    tgt.patches_stylized[index]->buffer[3] = VectorXf::Zero(tgt.patches_stylized[index]->buffer.size());
+//    for(int neighbor_index : tgt.patches_original[index]->neighbor_patches){
+//        Vector2i offset = final_reverse_NNF[neighbor_index];
+//        Vector2i xy = index_to_position(neighbor_index, tgt.width);
+//        int source_index = pos_to_index(xy + offset, src.width);
+//        tgt.patches_stylized[index]->buffer += src.patches_stylized[source_index]->buffer;
+//    }
+//    tgt.patches_stylized[index]->buffer = tgt.patches_stylized[index]->buffer / (float) tgt.patches_original[index]->neighbor_patches.size();
+
+
+
+//    Vector2i offset = final_reverse_NNF[index];
+//    Vector2i xy = index_to_position(index, tgt.width);
+//    int source_index = pos_to_index(xy + offset, src.width);
+//    tgt.patches_stylized[index]->buffer = src.patches_stylized[source_index]->buffer;
+
 }
 

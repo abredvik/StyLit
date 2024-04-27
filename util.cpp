@@ -1,4 +1,5 @@
 #include "util.h"
+#include <random>
 
 std::tuple<std::vector<RGBA>, int, int> loadImageFromFile(const QString &file) {
     QImage myImage;
@@ -88,4 +89,12 @@ RGBA toRGBA(const Eigen::Vector3f &color) {
 
 Vector2i nearest_neighbor(){
     return Vector2i(0, 0);
+}
+
+std::vector<RGBA> random_pixels(std::vector<RGBA>& RGBimage){
+    std::random_device                      rand_dev;
+    std::mt19937                            generator(rand_dev());
+    std::uniform_real_distribution<double>   distr(-1.0, 1.0);
+    std::shuffle(RGBimage.begin(), RGBimage.end(), generator);
+    return RGBimage;
 }

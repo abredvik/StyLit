@@ -74,4 +74,6 @@ RGBA toRGBA(const Eigen::Vector3f &color);
 
 Vector2i nearest_neighbor();
 
+std::vector<RGBA> random_pixels(std::vector<RGBA>& RGBimage);
+
 #endif // UTIL_H

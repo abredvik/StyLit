@@ -68,9 +68,9 @@ double Energy(const std::vector<VectorXf*>& A, const std::vector<VectorXf*>& B,
 //    return (|| A'(p) - B'(q) ||)^2 + mu (|| A(p) - B(q) ||)^2
     double result = 0.0;
     for (int i = 0; i < 4; ++i) {
-        result += mu * Distance(*A[i], *B[i]);
+        result += Distance(*A[i], *B[i]);
     }
-    return (result / 4.0) + Distance(Aprime, Bprime);
+    return (result * mu) + Distance(Aprime, Bprime);
 }
 
 std::random_device                      rand_dev;
@@ -307,7 +307,7 @@ NNF_t Patchmatcher::patch_match(const Image& src, const Image& tgt, std::unorder
     // fill NNF randomly
     NNF_t NNF;
     int imgSize = src.patches_original.size();
-    int numIterations = 6;
+    int numIterations = 2;
 
     randomize_NNF(NNF, imgSize, src.width, tgt.width, available_patches);
 
@@ -353,4 +353,3 @@ std::vector<RGBA> recreate_image(NNF_t NNF, const Image& target) {
     }
     return reconstruction;
 }
-
