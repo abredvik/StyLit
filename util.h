@@ -29,6 +29,7 @@ struct Image {
     std::vector<Patch*> patches_LPE1;
     std::vector<Patch*> patches_LPE2;
     std::vector<Patch*> patches_LPE3;
+    std::vector<Patch*> patches_LPE4;
     std::vector<Patch*> patches_stylized;
 };
 

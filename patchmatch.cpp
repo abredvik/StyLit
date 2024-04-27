@@ -29,7 +29,7 @@ std::vector<Patch*> get_patches(const std::vector<RGBA>& img, int width, int hei
     for (int p = 0; p < img.size(); ++p) {
         Patch *patch = result[p];
         patch->coordinates = index_to_position(p, width);
-        patch->neighbor_patches.reserve(window_width * window_width);
+        //patch->neighbor_patches.reserve(window_width * window_width);
         patch->is_matched = false;
 
         const Vector2i& xy = patch->coordinates;
@@ -67,7 +67,7 @@ double Energy(const std::vector<VectorXf*>& A, const std::vector<VectorXf*>& B,
               const VectorXf& Aprime, const VectorXf& Bprime, double mu) {
 //    return (|| A'(p) - B'(q) ||)^2 + mu (|| A(p) - B(q) ||)^2
     double result = 0.0;
-    for (int i = 0; i < 4; ++i) {
+    for (int i = 0; i < 5; ++i) {
         result += Distance(*A[i], *B[i]);
     }
     return (result * mu) + Distance(Aprime, Bprime);
@@ -78,22 +78,24 @@ std::mt19937                            generator(rand_dev());
 std::uniform_real_distribution<double>   distr(-1.0, 1.0);
 
 void Patchmatcher::random_search(NNF_t& NNF, const Image& src, const Image& tgt, Vector2i xy){
-    std::vector<VectorXf*> src_patches(4);
+    std::vector<VectorXf*> src_patches(5);
     int src_index = pos_to_index(xy, src.width);
     const VectorXf& src_stylized_patch = src.patches_stylized[src_index]->buffer;
     src_patches[0] = &(src.patches_original[src_index]->buffer);
     src_patches[1] = &(src.patches_LPE1[src_index]->buffer);
     src_patches[2] = &(src.patches_LPE2[src_index]->buffer);
     src_patches[3] = &(src.patches_LPE3[src_index]->buffer);
+    src_patches[4] = &(src.patches_LPE4[src_index]->buffer);
 
     Vector2i v0 = NNF[pos_to_index(xy, src.width)]; // this is the offset for the patch of interest
-    std::vector<VectorXf*> final_patches(4);
+    std::vector<VectorXf*> final_patches(5);
     int index = pos_to_index(xy + v0, tgt.width);
     const VectorXf& final_stylized_patch = tgt.patches_stylized[index]->buffer;
     final_patches[0] = &(tgt.patches_original[index]->buffer);
     final_patches[1] = &(tgt.patches_LPE1[index]->buffer);
     final_patches[2] = &(tgt.patches_LPE2[index]->buffer);
     final_patches[3] = &(tgt.patches_LPE3[index]->buffer);
+    final_patches[4] = &(tgt.patches_LPE4[index]->buffer);
 
     double final_energy = Energy(src_patches, final_patches, src_stylized_patch, final_stylized_patch, mu);
 
@@ -113,6 +115,7 @@ void Patchmatcher::random_search(NNF_t& NNF, const Image& src, const Image& tgt,
         candidate_patches[1] = &(tgt.patches_LPE1[candidate_index]->buffer);
         candidate_patches[2] = &(tgt.patches_LPE2[candidate_index]->buffer);
         candidate_patches[3] = &(tgt.patches_LPE3[candidate_index]->buffer);
+        candidate_patches[4] = &(tgt.patches_LPE4[candidate_index]->buffer);
         double candidate_energy = Energy(src_patches, candidate_patches, src_stylized_patch, candidate_stylized_patch, mu);
 
         if (candidate_energy < final_energy && !(tgt.patches_stylized[candidate_index]->is_matched)){
@@ -147,27 +150,29 @@ void Patchmatcher::propagate_odd(NNF_t& NNF, const Image& src, const Image& tgt,
     bool left_valid = (xy[0] > 0);
     bool top_valid = (xy[1] > 0);
 
-    std::vector<VectorXf*> src_patches(4);
+    std::vector<VectorXf*> src_patches(5);
     int src_index = pos_to_index(xy, src.width);
     const VectorXf& src_stylized_patch = src.patches_stylized[src_index]->buffer;
     src_patches[0] = &(src.patches_original[src_index]->buffer);
     src_patches[1] = &(src.patches_LPE1[src_index]->buffer);
     src_patches[2] = &(src.patches_LPE2[src_index]->buffer);
     src_patches[3] = &(src.patches_LPE3[src_index]->buffer);
+    src_patches[4] = &(src.patches_LPE4[src_index]->buffer);
 
     Vector2i tgt_center = NNF[pos_to_index(xy, tgt.width)];
-    std::vector<VectorXf*> tgt_center_patches(4);
+    std::vector<VectorXf*> tgt_center_patches(5);
     int tgt_center_index = pos_to_index(xy + tgt_center, tgt.width);
     const VectorXf& tgt_center_stylized_patch = tgt.patches_stylized[tgt_center_index]->buffer;
     tgt_center_patches[0] = &(tgt.patches_original[tgt_center_index]->buffer);
     tgt_center_patches[1] = &(tgt.patches_LPE1[tgt_center_index]->buffer);
     tgt_center_patches[2] = &(tgt.patches_LPE2[tgt_center_index]->buffer);
     tgt_center_patches[3] = &(tgt.patches_LPE3[tgt_center_index]->buffer);
+    tgt_center_patches[4] = &(tgt.patches_LPE4[tgt_center_index]->buffer);
 
 
     Vector2i tgt_left;
     Vector2i tmp;
-    std::vector<VectorXf*> tgt_left_patches(4);
+    std::vector<VectorXf*> tgt_left_patches(5);
     VectorXf tgt_left_stylized_patch;
     if (left_valid) {
         tgt_left = NNF[pos_to_index(xy - Vector2i(1, 0), tgt.width)];
@@ -179,6 +184,7 @@ void Patchmatcher::propagate_odd(NNF_t& NNF, const Image& src, const Image& tgt,
             tgt_left_patches[1] = &(tgt.patches_LPE1[tgt_left_index]->buffer);
             tgt_left_patches[2] = &(tgt.patches_LPE2[tgt_left_index]->buffer);
             tgt_left_patches[3] = &(tgt.patches_LPE3[tgt_left_index]->buffer);
+            tgt_left_patches[4] = &(tgt.patches_LPE4[tgt_left_index]->buffer);
             if (tgt.patches_original[tgt_left_index]->is_matched) left_valid = false;
         } else {
             left_valid = false;
@@ -186,7 +192,7 @@ void Patchmatcher::propagate_odd(NNF_t& NNF, const Image& src, const Image& tgt,
     }
 
     Vector2i tgt_top;
-    std::vector<VectorXf*> tgt_top_patches(4);
+    std::vector<VectorXf*> tgt_top_patches(5);
     VectorXf tgt_top_stylized_patch;
     if (top_valid) {
         tgt_top = NNF[pos_to_index(xy - Vector2i(0, 1), tgt.width)];
@@ -198,6 +204,7 @@ void Patchmatcher::propagate_odd(NNF_t& NNF, const Image& src, const Image& tgt,
             tgt_top_patches[1] = &(tgt.patches_LPE1[tgt_top_index]->buffer);
             tgt_top_patches[2] = &(tgt.patches_LPE2[tgt_top_index]->buffer);
             tgt_top_patches[3] = &(tgt.patches_LPE3[tgt_top_index]->buffer);
+            tgt_top_patches[4] = &(tgt.patches_LPE4[tgt_top_index]->buffer);
             if (tgt.patches_original[tgt_top_index]->is_matched) top_valid = false;
         } else {
             top_valid = false;
@@ -227,27 +234,29 @@ void Patchmatcher::propagate_even(NNF_t& NNF, const Image& src, const Image& tgt
     bool right_valid = (xy[0] < src.width - 1);
     bool bottom_valid = (xy[1] < src.height - 1);
 
-    std::vector<VectorXf*> src_patches(4);
+    std::vector<VectorXf*> src_patches(5);
     int src_index = pos_to_index(xy, src.width);
     const VectorXf& src_stylized_patch = src.patches_stylized[src_index]->buffer;
     src_patches[0] = &(src.patches_original[src_index]->buffer);
     src_patches[1] = &(src.patches_LPE1[src_index]->buffer);
     src_patches[2] = &(src.patches_LPE2[src_index]->buffer);
     src_patches[3] = &(src.patches_LPE3[src_index]->buffer);
+    src_patches[4] = &(src.patches_LPE4[src_index]->buffer);
 
     Vector2i tgt_center = NNF[pos_to_index(xy, tgt.width)];
-    std::vector<VectorXf*> tgt_center_patches(4);
+    std::vector<VectorXf*> tgt_center_patches(5);
     int tgt_center_index = pos_to_index(xy + tgt_center, tgt.width);
     const VectorXf& tgt_center_stylized_patch = tgt.patches_stylized[tgt_center_index]->buffer;
     tgt_center_patches[0] = &(tgt.patches_original[tgt_center_index]->buffer);
     tgt_center_patches[1] = &(tgt.patches_LPE1[tgt_center_index]->buffer);
     tgt_center_patches[2] = &(tgt.patches_LPE2[tgt_center_index]->buffer);
     tgt_center_patches[3] = &(tgt.patches_LPE3[tgt_center_index]->buffer);
+    tgt_center_patches[4] = &(tgt.patches_LPE4[tgt_center_index]->buffer);
 
 
     Vector2i tgt_right;
     Vector2i tmp;
-    std::vector<VectorXf*> tgt_right_patches(4);
+    std::vector<VectorXf*> tgt_right_patches(5);
     VectorXf tgt_right_stylized_patch;
     if (right_valid) {
         tgt_right = NNF[pos_to_index(xy + Vector2i(1, 0), tgt.width)];
@@ -259,6 +268,7 @@ void Patchmatcher::propagate_even(NNF_t& NNF, const Image& src, const Image& tgt
             tgt_right_patches[1] = &(tgt.patches_LPE1[tgt_right_index]->buffer);
             tgt_right_patches[2] = &(tgt.patches_LPE2[tgt_right_index]->buffer);
             tgt_right_patches[3] = &(tgt.patches_LPE3[tgt_right_index]->buffer);
+            tgt_right_patches[4] = &(tgt.patches_LPE4[tgt_right_index]->buffer);
             if (tgt.patches_original[tgt_right_index]->is_matched) right_valid = false;
         } else {
             right_valid = false;
@@ -266,7 +276,7 @@ void Patchmatcher::propagate_even(NNF_t& NNF, const Image& src, const Image& tgt
     }
 
     Vector2i tgt_bottom;
-    std::vector<VectorXf*> tgt_bottom_patches(4);
+    std::vector<VectorXf*> tgt_bottom_patches(5);
     VectorXf tgt_bottom_stylized_patch;
     if (bottom_valid) {
         tgt_bottom = NNF[pos_to_index(xy + Vector2i(0, 1), tgt.width)];
@@ -278,6 +288,7 @@ void Patchmatcher::propagate_even(NNF_t& NNF, const Image& src, const Image& tgt
             tgt_bottom_patches[1] = &(tgt.patches_LPE1[tgt_bottom_index]->buffer);
             tgt_bottom_patches[2] = &(tgt.patches_LPE2[tgt_bottom_index]->buffer);
             tgt_bottom_patches[3] = &(tgt.patches_LPE3[tgt_bottom_index]->buffer);
+            tgt_bottom_patches[4] = &(tgt.patches_LPE4[tgt_bottom_index]->buffer);
             if (tgt.patches_original[tgt_bottom_index]->is_matched) bottom_valid = false;
         } else {
             bottom_valid = false;

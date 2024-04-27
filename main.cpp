@@ -36,20 +36,22 @@ int main(int argc, char *argv[])
     const QString stylization = settings.value("style/filePath").toString();
 
     std::vector<QString> srcPaths;
-    srcPaths.reserve(5);
-    srcPaths.push_back(srcFolder + "/color.bmp");
-    srcPaths.push_back(srcFolder + "/LPE1.bmp");
-    srcPaths.push_back(srcFolder + "/LPE2.bmp");
-    srcPaths.push_back(srcFolder + "/LPE3.bmp");
+    srcPaths.reserve(6);
+    srcPaths.push_back(srcFolder + "color.bmp");
+    srcPaths.push_back(srcFolder + "LPE1.bmp");
+    srcPaths.push_back(srcFolder + "LPE2.bmp");
+    srcPaths.push_back(srcFolder + "LPE3.bmp");
+    srcPaths.push_back(srcFolder + "LPE4.png");
     srcPaths.push_back(stylization);
 
     std::vector<QString> tgtPaths;
-    srcPaths.reserve(5);
-    tgtPaths.push_back(tgtFolder + "/color.bmp");
-    tgtPaths.push_back(tgtFolder + "/LPE1.bmp");
-    tgtPaths.push_back(tgtFolder + "/LPE2.bmp");
-    tgtPaths.push_back(tgtFolder + "/LPE3.bmp");
-    tgtPaths.push_back("Data/Guy/black_square.bmp");
+    srcPaths.reserve(6);
+    tgtPaths.push_back(tgtFolder + "color.bmp");
+    tgtPaths.push_back(tgtFolder + "LPE1.bmp");
+    tgtPaths.push_back(tgtFolder + "LPE2.bmp");
+    tgtPaths.push_back(tgtFolder + "LPE3.bmp");
+    tgtPaths.push_back(srcFolder + "LPE4.png");
+    tgtPaths.push_back(tgtFolder + "black_square.bmp");
 
     Image srcImg, tgtImg;
     init_image(srcPaths, srcImg);
