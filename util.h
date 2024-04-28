@@ -8,6 +8,7 @@
 #include <unordered_set>
 
 #include "rgba.h"
+#include "gaussianpyramid.h"
 
 #include "Eigen/Dense"
 using namespace Eigen;
@@ -30,6 +31,7 @@ struct Image {
     std::vector<Patch*> patches_LPE2;
     std::vector<Patch*> patches_LPE3;
     std::vector<Patch*> patches_stylized;
+    Pyramid_t *pyramid;
 };
 
 std::tuple<std::vector<RGBA>, int, int> loadImageFromFile(const QString &file);

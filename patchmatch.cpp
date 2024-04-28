@@ -29,7 +29,7 @@ std::vector<Patch*> get_patches(const std::vector<RGBA>& img, int width, int hei
     for (int p = 0; p < img.size(); ++p) {
         Patch *patch = result[p];
         patch->coordinates = index_to_position(p, width);
-        patch->neighbor_patches.reserve(window_width * window_width);
+        //patch->neighbor_patches.reserve(window_width * window_width);
         patch->is_matched = false;
 
         const Vector2i& xy = patch->coordinates;
@@ -53,6 +53,7 @@ std::vector<Patch*> get_patches(const std::vector<RGBA>& img, int width, int hei
                 }
             }
         }
+
     }
 
     return result;
