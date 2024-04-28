@@ -196,8 +196,6 @@ void Stylit::stylit_algorithm(const Image& src, Image& tgt, int current_iteratio
 
     std::cout << "done with stylit algorithm" << std::endl;
 
-//    tgt.patches_stylized = get_patches(new_image, tgt.width, tgt.height);
-
 }
 
 struct compare {
@@ -206,33 +204,6 @@ struct compare {
     }
 };
 
-std::pair<int, double> Stylit::calculate_k_and_error_budget(std::vector<std::pair<int, double>> &errors){
-    std::sort(errors.begin(), errors.end(), compare());
-    int num_steps = std::min((int)errors.size(), (int)50);
-    int step_size = (errors.size()  + num_steps - 1) / num_steps;
-    MatrixX2d l_matrix(num_steps, 2);
-    VectorXd b_vector(num_steps);
-    double max_error = errors[errors.size() - 1].second;
-//#pragma omp parallel for
-    for (int i = 0; i < errors.size(); i += step_size) {
-        l_matrix(i / step_size, 0) = 1.0;
-        l_matrix(i / step_size, 1) = -1.0 * ((i / step_size) / (double)num_steps);
-        b_vector(i / step_size) = 1.0 / (errors[i].second / max_error);
-    }
-
-    Vector2d result = l_matrix.colPivHouseholderQr().solve(b_vector);
-    double a = result(0);
-    double b = result(1);
-    int k = errors.size() * (-sqrt(1.0 / b) + (a / b));
-
-    double T = 0.0;
-    for (int i = 0; i < k; ++i) {
-        T += errors[i].second;
-    }
-
-    return std::make_pair(k, T);
-}
-
 int Stylit::calculate_k(std::vector<std::pair<int, double>> &errors){
     std::sort(errors.begin(), errors.end(), compare());
     int num_steps = std::min((int)errors.size(), (int)50);
@@ -240,7 +211,6 @@ int Stylit::calculate_k(std::vector<std::pair<int, double>> &errors){
     MatrixX2d l_matrix(num_steps, 2);
     VectorXd b_vector(num_steps);
     double max_error = errors[errors.size() - 1].second;
-    //#pragma omp parallel for
     for (int i = 0; i < errors.size(); i += step_size) {
         l_matrix(i / step_size, 0) = 1.0;
         l_matrix(i / step_size, 1) = -1.0 * ((i / step_size) / (double)num_steps);
@@ -253,6 +223,16 @@ int Stylit::calculate_k(std::vector<std::pair<int, double>> &errors){
     int k = errors.size() * (-sqrt(1.0 / b) + (a / b));
 
     return k;
+}
+
+std::pair<int, double> Stylit::calculate_k_and_error_budget(std::vector<std::pair<int, double>> &errors){
+    int k = calculate_k(errors);
+    double T = 0.0;
+    for (int i = 0; i < k; ++i) {
+        T += errors[i].second;
+    }
+
+    return std::make_pair(k, T);
 }
 
 void Stylit::resolve_unmatched(const Image& src, Image& tgt, const std::unordered_set<int>& unmatched) {

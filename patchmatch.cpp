@@ -316,20 +316,19 @@ void Patchmatcher::propagate_even(NNF_t& NNF, const Image& src, const Image& tgt
     }
 
     double current_dist = Energy(src_patches, tgt_center_patches, src_stylized_patch, tgt_center_stylized_patch, mu);
-    int index = pos_to_index(xy, src.width);
     if (right_valid) {
         double right_dist = Energy(src_patches, tgt_right_patches, src_stylized_patch, tgt_right_stylized_patch, mu);
         if (right_dist < current_dist) {
-            NNF[index] = tgt_right;
-            errors[index] = std::make_pair(index, right_dist);
+            NNF[src_index] = tgt_right;
+            errors[src_index] = std::make_pair(src_index, right_dist);
         }
     }
 
     if (bottom_valid) {
         double bottom_dist = Energy(src_patches, tgt_bottom_patches, src_stylized_patch, tgt_bottom_stylized_patch, mu);
         if (bottom_dist < current_dist) {
-            NNF[index] = tgt_bottom;
-            errors[index] = std::make_pair(index, bottom_dist);
+            NNF[src_index] = tgt_bottom;
+            errors[src_index] = std::make_pair(src_index, bottom_dist);
         }
     }
 }
@@ -346,7 +345,7 @@ NNF_t Patchmatcher::patch_match(const Image& src, const Image& tgt, std::unorder
         if (iteration % 2) {
             // scanline order
             for (int j = 0; j < imgSize; ++j) {
-                const Vector2i& xy = index_to_position(j, src.width);//src.patches_original[j]->coordinates;
+                const Vector2i& xy = src.patches_original[j]->coordinates;
 
                 // propagation
                 propagate_odd(NNF, src, tgt, xy);
@@ -358,7 +357,7 @@ NNF_t Patchmatcher::patch_match(const Image& src, const Image& tgt, std::unorder
         } else {
             // reverse scanline order
             for (int j = imgSize - 1; j >= 0; --j) {
-                const Vector2i& xy = index_to_position(j, src.width);
+                const Vector2i& xy = src.patches_original[j]->coordinates;
 
                 // propagation
                 propagate_even(NNF, src, tgt, xy);
