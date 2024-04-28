@@ -108,7 +108,7 @@ void Patchmatcher::random_search(NNF_t& NNF, const Image& src, const Image& tgt,
         Vector2i ui = (v0.cast<double>() + (w * std::pow(alpha, i) * R)).cast<int>();
         Vector2i newCoord = xy + ui;
         newCoord = newCoord.cwiseMax(0).cwiseMin(src.width - 1);
-        std::vector<VectorXf*> candidate_patches(4);
+        std::vector<VectorXf*> candidate_patches(5);
         int candidate_index = pos_to_index(newCoord, src.width);
         const VectorXf& candidate_stylized_patch = tgt.patches_stylized[candidate_index]->buffer;
         candidate_patches[0] = &(tgt.patches_original[candidate_index]->buffer);

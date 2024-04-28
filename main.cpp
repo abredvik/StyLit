@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
 //    saveImageToFile("Output/Random.png", random_pixels(RGBimage), 256, 256);
 //    return 1;
 
-    saveImageToFile("Output/RECONSTRUCTION.png", stylit.run(srcImg, tgtImg, 1), tgtImg.width, tgtImg.height);
+    saveImageToFile("Output/RECONSTRUCTION.png", stylit.run(srcImg, tgtImg, 2), tgtImg.width, tgtImg.height);
 
     MainWindow w;
     w.show();
