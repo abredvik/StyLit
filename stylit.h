@@ -7,6 +7,7 @@ using namespace Eigen;
 #include "rgba.h"
 #include "util.h"
 #include "patchmatch.h"
+#include "gaussianpyramid.h"
 
 class Stylit
 {
@@ -18,7 +19,7 @@ public:
 
     NNF_t final_reverse_NNF;
 
-    void stylit_algorithm(const Image& src, Image& tgt);
+    void stylit_algorithm(const Image& src, Image& tgt, int current_iteration);
 
     int calculate_error_budget(std::vector<std::pair<int, double>> &errors);
 
@@ -26,11 +27,11 @@ public:
 
     RGBA average(int index, const Image& src, Image& tgt);
 
-    std::vector<RGBA> run(const Image& src, Image& tgt, int iterations);
+    std::vector<RGBA> run(Image& src, Image& tgt, int iterations);
 
     Vector2i nearest_neighbor(const Image& src, std::vector<VectorXf*> tgt_patches, const VectorXf& tgt_style, Vector2i xy);
 };
 
-void init_image(const std::vector<QString>& filepath, Image& img);
+void init_image(const std::vector<QString>& filepath, Image& img, int num_iterations);
 
 #endif // STYLIT_H

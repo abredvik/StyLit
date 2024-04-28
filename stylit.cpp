@@ -10,46 +10,93 @@ Stylit::Stylit()
 
 }
 
-void init_image(const std::vector<QString>& filenames, Image& img) {
+void init_image(const std::vector<QString>& filenames, Image& img, int num_iterations) {
 //#pragma omp parallel for
+    Gaussianpyramid gaussianpyramid;
+    img.pyramid = new Pyramid_t();
     for (int i = 0; i < filenames.size(); ++i) {
         const QString& filename  = filenames[i];
         auto tup = loadImageFromFile(filename);
         const std::vector<RGBA>& RGBimage = std::get<0>(tup);
         img.width = std::get<1>(tup);
         img.height = std::get<2>(tup);
-        const std::vector<Patch*>& patches = get_patches(RGBimage, img.width, img.height);
+        //const std::vector<Patch*>& patches = get_patches(RGBimage, img.width, img.height);
 
         switch (i) {
-        case 0: img.patches_original = patches; break;
-        case 1: img.patches_LPE1 = patches; break;
-        case 2: img.patches_LPE2 = patches; break;
-        case 3: img.patches_LPE3 = patches; break;
-        case 4: img.patches_LPE4 = patches; break;
-        case 5: img.patches_stylized = patches; break;
+        case 0: //img.patches_original = patches;
+            img.pyramid->color = gaussianpyramid.create_pyrimid(num_iterations, RGBimage, img.width, img.height);
+            break;
+        case 1: //img.patches_LPE1 = patches;
+            img.pyramid->LPE1 = gaussianpyramid.create_pyrimid(num_iterations, RGBimage, img.width, img.height);
+            break;
+        case 2: //img.patches_LPE2 = patches;
+            img.pyramid->LPE2 = gaussianpyramid.create_pyrimid(num_iterations, RGBimage, img.width, img.height);
+            break;
+        case 3: //img.patches_LPE3 = patches;
+            img.pyramid->LPE3 = gaussianpyramid.create_pyrimid(num_iterations, RGBimage, img.width, img.height);
+            break;
+        case 4:
+            img.pyramid->LPE4 = gaussianpyramid.create_pyrimid(num_iterations, RGBimage, img.width, img.height);
+            break;
+        case 5: //img.patches_stylized = patches;
+            img.pyramid->style = gaussianpyramid.create_pyrimid(num_iterations, RGBimage, img.width, img.height);
+            break;
         }
     }
 }
 
-std::vector<RGBA> Stylit::run(const Image& src, Image& tgt, int iterations){
+std::vector<RGBA> Stylit::run(Image& src, Image& tgt, int iterations){
+    Scale scale;
+
+    int original_src_width = src.width;
+    int original_src_height = src.height;
+
+    int original_tgt_width = src.width;
+    int original_tgt_height = src.height;
+
     for(int i = 0; i < iterations; i++){
-        stylit_algorithm(src, tgt);
+
+        src.width = original_src_width / (1 << (iterations - i - 1));
+        src.height = original_src_height / (1 << (iterations - i - 1));
+
+        tgt.width = original_tgt_width / (1 << (iterations - i - 1));
+        tgt.height = original_tgt_height / (1 << (iterations - i - 1));
+
+        src.patches_original = get_patches(src.pyramid->color[i], src.width, src.height);
+        src.patches_LPE1 = get_patches(src.pyramid->LPE1[i], src.width, src.height);
+        src.patches_LPE2 = get_patches(src.pyramid->LPE2[i], src.width, src.height);
+        src.patches_LPE3 = get_patches(src.pyramid->LPE3[i], src.width, src.height);
+        src.patches_stylized = get_patches(src.pyramid->style[i], src.width, src.height);
+
+        tgt.patches_original = get_patches(tgt.pyramid->color[i], tgt.width, tgt.height);
+        tgt.patches_LPE1 = get_patches(tgt.pyramid->LPE1[i], tgt.width, tgt.height);
+        tgt.patches_LPE2 = get_patches(tgt.pyramid->LPE2[i], tgt.width, tgt.height);
+        tgt.patches_LPE3 = get_patches(tgt.pyramid->LPE3[i], tgt.width, tgt.height);
+        tgt.patches_stylized = get_patches(tgt.pyramid->style[i], tgt.width, tgt.height);
+
+        stylit_algorithm(src, tgt, i);
+
+        if(i != iterations - 1){
+            tgt.pyramid->style[i + 1] = scale.handle_scale(tgt.pyramid->style[i], tgt.width, tgt.height, 2, 2);
+        }
+
+        std::cout << "done with iteration" << std::endl;
     }
 
-    std::vector<RGBA> output(tgt.patches_stylized.size());
+//    std::vector<RGBA> output(tgt.patches_stylized.size());
 
-    for(int j = 0; j < tgt.patches_stylized.size(); ++j){
-        float r, g, b;
-        r = tgt.patches_stylized[j]->buffer[36];
-        g = tgt.patches_stylized[j]->buffer[37];
-        b = tgt.patches_stylized[j]->buffer[38];
-        output[j] = toRGBA(Vector3f(r, g, b));
-    }
+//    for(int j = 0; j < tgt.patches_stylized.size(); ++j){
+//        float r, g, b;
+//        r = tgt.patches_stylized[j]->buffer[36];
+//        g = tgt.patches_stylized[j]->buffer[37];
+//        b = tgt.patches_stylized[j]->buffer[38];
+//        output[j] = toRGBA(Vector3f(r, g, b));
+//    }
 
-    return output;
+    return tgt.pyramid->style[iterations - 1];
 }
 
-void Stylit::stylit_algorithm(const Image& src, Image& tgt){
+void Stylit::stylit_algorithm(const Image& src, Image& tgt, int current_iteration){
 
     int targets_covered = 0;
 
@@ -71,9 +118,11 @@ void Stylit::stylit_algorithm(const Image& src, Image& tgt){
 
     while(percent_coverage < 0.95f){
         NNF_t temp_NNF = patchmatcher.patch_match(src, tgt, unmatched);
-        int k = calculate_error_budget(patchmatcher.errors);
+        int k = 0.7 * patchmatcher.errors.size();
+        //int k = calculate_error_budget(patchmatcher.errors);
+        std::cout << k << std::endl;
 
-        for (int i = 0; i < k; i++){
+        for (int i = 0; i < std::min((int)patchmatcher.errors.size(), k); i++){
             int source_index = patchmatcher.errors[i].first;
 
             int target_index = pos_to_index(temp_NNF[source_index] + index_to_position(source_index, src.width), tgt.width);
@@ -98,22 +147,31 @@ void Stylit::stylit_algorithm(const Image& src, Image& tgt){
 
         std::cout << percent_coverage << std::endl;
 
-//        for(int i = 0; i < (tgt.width * tgt.height); i ++){
-//            if (tgt.patches_original[i]->is_matched)
-//                average(i, src, tgt);
-//        }
-
     }
-
     resolve_unmatched(src, tgt, unmatched);
 
     std::vector<RGBA> new_image(tgt.width * tgt.height);
 #pragma omp parallel for
     for(int i = 0; i < (tgt.width * tgt.height); i ++){
-        new_image[i] = average(i, src, tgt);
+        if (tgt.patches_original[i]->is_matched){
+            new_image[i] = average(i, src, tgt);
+//            Vector2i offset = final_reverse_NNF[i];
+//            Vector2i xy = index_to_position(i, tgt.width);
+//            int source_index = pos_to_index(xy + offset, src.width);
+//            float r, g, b;
+//            r = g = b = 0;
+//            r = src.patches_stylized[source_index]->buffer[36];
+//            g = src.patches_stylized[source_index]->buffer[37];
+//            b = src.patches_stylized[source_index]->buffer[38];
+//            new_image[i] = toRGBA(Vector3f(r, g, b));
+        }
     }
 
-    tgt.patches_stylized = get_patches(new_image, tgt.width, tgt.height);
+    tgt.pyramid->style[current_iteration] = new_image;
+
+    std::cout << "done with stylit algorithm" << std::endl;
+
+//    tgt.patches_stylized = get_patches(new_image, tgt.width, tgt.height);
 
 }
 
@@ -125,14 +183,15 @@ struct compare {
 
 int Stylit::calculate_error_budget(std::vector<std::pair<int, double>> &errors){
     std::sort(errors.begin(), errors.end(), compare());
-    int step_size = (errors.size() + 50 - 1) / 50;
-    MatrixX2d l_matrix(50, 2);
-    VectorXd b_vector(50);
+    int num_steps = std::min((int)errors.size(), (int)50);
+    int step_size = (errors.size()  + num_steps - 1) / num_steps;
+    MatrixX2d l_matrix(num_steps, 2);
+    VectorXd b_vector(num_steps);
     double max_error = errors[errors.size() - 1].second;
 #pragma omp parallel for
     for (int i = 0; i < errors.size(); i += step_size) {
         l_matrix(i / step_size, 0) = 1.0;
-        l_matrix(i / step_size, 1) = -1.0 * ((i / step_size) / 50.0);
+        l_matrix(i / step_size, 1) = -1.0 * ((i / step_size) / (float)num_steps);
         b_vector(i / step_size) = 1.0 / (errors[i].second / max_error);
     }
 
@@ -199,11 +258,11 @@ RGBA Stylit::average(int index, const Image& src, Image& tgt){
     g = 0;
     b = 0;
     int j = 24;
-
     for(int neighbor_index : tgt.patches_original[index]->neighbor_patches){
         Vector2i offset = final_reverse_NNF[neighbor_index];
         Vector2i xy = index_to_position(neighbor_index, tgt.width);
         int source_index = pos_to_index(xy + offset, src.width);
+        // Might be causing issues for edge pixels
         r += src.patches_stylized[source_index]->buffer[j * 3];
         g += src.patches_stylized[source_index]->buffer[(j * 3) + 1];
         b += src.patches_stylized[source_index]->buffer[(j * 3) + 2];

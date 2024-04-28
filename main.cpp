@@ -10,6 +10,8 @@
 #include "Eigen/Dense"
 using namespace Eigen;
 
+#include <iostream>
+
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
@@ -34,8 +36,10 @@ int main(int argc, char *argv[])
     const QString srcFolder = settings.value("source/folderPath").toString();
     const QString tgtFolder = settings.value("target/folderPath").toString();
     const QString stylization = settings.value("style/filePath").toString();
+    const int num_iterations = settings.value("params/num_iterations").toInt();
 
     std::vector<QString> srcPaths;
+
     srcPaths.reserve(6);
     srcPaths.push_back(srcFolder + "color.bmp");
     srcPaths.push_back(srcFolder + "LPE1.bmp");
@@ -54,8 +58,11 @@ int main(int argc, char *argv[])
     tgtPaths.push_back(tgtFolder + "black_square.bmp");
 
     Image srcImg, tgtImg;
-    init_image(srcPaths, srcImg);
-    init_image(tgtPaths, tgtImg);
+    init_image(srcPaths, srcImg, num_iterations);
+    init_image(tgtPaths, tgtImg, num_iterations);
+
+    int original_tgt_width = tgtImg.width;
+    int original_tgt_height = tgtImg.height;
 
     Stylit stylit;
 
@@ -65,7 +72,11 @@ int main(int argc, char *argv[])
 //    saveImageToFile("Output/Random.png", random_pixels(RGBimage), 256, 256);
 //    return 1;
 
+<<<<<<< HEAD
     saveImageToFile("Output/RECONSTRUCTION.png", stylit.run(srcImg, tgtImg, 2), tgtImg.width, tgtImg.height);
+=======
+    saveImageToFile("Output/RECONSTRUCTION.png", stylit.run(srcImg, tgtImg, num_iterations), original_tgt_width, original_tgt_height);
+>>>>>>> scaling
 
     MainWindow w;
     w.show();
