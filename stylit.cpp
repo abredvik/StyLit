@@ -118,16 +118,36 @@ void Stylit::stylit_algorithm(const Image& src, Image& tgt, int current_iteratio
         unmatched.insert(i);
     }
 
+    double T = 0.0;
+
     while(percent_coverage < 0.95f){
         NNF_t temp_NNF = patchmatcher.patch_match(src, tgt, unmatched);
-        int k = 0.7 * patchmatcher.errors.size();
-        //int k = calculate_error_budget(patchmatcher.errors);
-        std::cout << k << std::endl;
+        int k;
+        if (T == 0.0) {
+            std::pair<int, double> k_T = calculate_k_and_error_budget(patchmatcher.errors);
+            k = k_T.first;
+            T = k_T.second;
+        } else {
+            k = calculate_k(patchmatcher.errors);
+        }
 
-        for (int i = 0; i < std::min((int)patchmatcher.errors.size(), k); i++){
+        std::cout << "k = " << k << " < " << patchmatcher.errors.size() << " = errors.size()" << std::endl;
+
+
+        std::unordered_set<int> matched_target_indices;
+
+        double sum_errors = 0.0;
+        for (int i = 0; i < std::min(k, (int)patchmatcher.errors.size()); i++){
+            sum_errors += patchmatcher.errors[i].second;
+            if (sum_errors > T) {
+                std::cout << "error budget reached at i = " << i << std::endl;
+                break;
+            }
+
             int source_index = patchmatcher.errors[i].first;
 
             int target_index = pos_to_index(temp_NNF[source_index] + index_to_position(source_index, src.width), tgt.width);
+            matched_target_indices.insert(target_index);
 
             if(tgt.patches_original[target_index]->is_matched){
                 continue;
@@ -140,12 +160,15 @@ void Stylit::stylit_algorithm(const Image& src, Image& tgt, int current_iteratio
             tgt.patches_LPE2[target_index]->is_matched = true;
             tgt.patches_LPE3[target_index]->is_matched = true;
             tgt.patches_LPE4[target_index]->is_matched = true;
+            tgt.patches_stylized[target_index]->is_matched = true;
             final_NNF[source_index] = temp_NNF[source_index];
             final_reverse_NNF[target_index] = -temp_NNF[source_index];
 
-        percent_coverage = (float) targets_covered / (float) total_targets;
-
         }
+
+        std::cout << "number of unique targets matched: " << matched_target_indices.size() << std::endl;
+        std::cout << "targets covered: " << targets_covered << std::endl;
+        percent_coverage = (float) targets_covered / (float) total_targets;
 
         std::cout << percent_coverage << std::endl;
 
@@ -183,17 +206,44 @@ struct compare {
     }
 };
 
-int Stylit::calculate_error_budget(std::vector<std::pair<int, double>> &errors){
+std::pair<int, double> Stylit::calculate_k_and_error_budget(std::vector<std::pair<int, double>> &errors){
     std::sort(errors.begin(), errors.end(), compare());
     int num_steps = std::min((int)errors.size(), (int)50);
     int step_size = (errors.size()  + num_steps - 1) / num_steps;
     MatrixX2d l_matrix(num_steps, 2);
     VectorXd b_vector(num_steps);
     double max_error = errors[errors.size() - 1].second;
-#pragma omp parallel for
+//#pragma omp parallel for
     for (int i = 0; i < errors.size(); i += step_size) {
         l_matrix(i / step_size, 0) = 1.0;
-        l_matrix(i / step_size, 1) = -1.0 * ((i / step_size) / (float)num_steps);
+        l_matrix(i / step_size, 1) = -1.0 * ((i / step_size) / (double)num_steps);
+        b_vector(i / step_size) = 1.0 / (errors[i].second / max_error);
+    }
+
+    Vector2d result = l_matrix.colPivHouseholderQr().solve(b_vector);
+    double a = result(0);
+    double b = result(1);
+    int k = errors.size() * (-sqrt(1.0 / b) + (a / b));
+
+    double T = 0.0;
+    for (int i = 0; i < k; ++i) {
+        T += errors[i].second;
+    }
+
+    return std::make_pair(k, T);
+}
+
+int Stylit::calculate_k(std::vector<std::pair<int, double>> &errors){
+    std::sort(errors.begin(), errors.end(), compare());
+    int num_steps = std::min((int)errors.size(), (int)50);
+    int step_size = (errors.size()  + num_steps - 1) / num_steps;
+    MatrixX2d l_matrix(num_steps, 2);
+    VectorXd b_vector(num_steps);
+    double max_error = errors[errors.size() - 1].second;
+    //#pragma omp parallel for
+    for (int i = 0; i < errors.size(); i += step_size) {
+        l_matrix(i / step_size, 0) = 1.0;
+        l_matrix(i / step_size, 1) = -1.0 * ((i / step_size) / (double)num_steps);
         b_vector(i / step_size) = 1.0 / (errors[i].second / max_error);
     }
 

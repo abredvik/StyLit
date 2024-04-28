@@ -21,7 +21,9 @@ public:
 
     void stylit_algorithm(const Image& src, Image& tgt, int current_iteration);
 
-    int calculate_error_budget(std::vector<std::pair<int, double>> &errors);
+    std::pair<int, double> calculate_k_and_error_budget(std::vector<std::pair<int, double>> &errors);
+
+    int calculate_k(std::vector<std::pair<int, double>> &errors);
 
     void resolve_unmatched(const Image& src, Image& tgt, const std::unordered_set<int>& unmatched);
 
