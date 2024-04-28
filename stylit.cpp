@@ -66,12 +66,14 @@ std::vector<RGBA> Stylit::run(Image& src, Image& tgt, int iterations){
         src.patches_LPE1 = get_patches(src.pyramid->LPE1[i], src.width, src.height);
         src.patches_LPE2 = get_patches(src.pyramid->LPE2[i], src.width, src.height);
         src.patches_LPE3 = get_patches(src.pyramid->LPE3[i], src.width, src.height);
+        src.patches_LPE4 = get_patches(src.pyramid->LPE4[i], src.width, src.height);
         src.patches_stylized = get_patches(src.pyramid->style[i], src.width, src.height);
 
         tgt.patches_original = get_patches(tgt.pyramid->color[i], tgt.width, tgt.height);
         tgt.patches_LPE1 = get_patches(tgt.pyramid->LPE1[i], tgt.width, tgt.height);
         tgt.patches_LPE2 = get_patches(tgt.pyramid->LPE2[i], tgt.width, tgt.height);
         tgt.patches_LPE3 = get_patches(tgt.pyramid->LPE3[i], tgt.width, tgt.height);
+        tgt.patches_LPE4 = get_patches(tgt.pyramid->LPE4[i], tgt.width, tgt.height);
         tgt.patches_stylized = get_patches(tgt.pyramid->style[i], tgt.width, tgt.height);
 
         stylit_algorithm(src, tgt, i);

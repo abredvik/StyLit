@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
     tgtPaths.push_back(tgtFolder + "LPE1.bmp");
     tgtPaths.push_back(tgtFolder + "LPE2.bmp");
     tgtPaths.push_back(tgtFolder + "LPE3.bmp");
-    tgtPaths.push_back(srcFolder + "LPE4.png");
+    tgtPaths.push_back(tgtFolder + "LPE4.png");
     tgtPaths.push_back(tgtFolder + "black_square.bmp");
 
     Image srcImg, tgtImg;
@@ -72,11 +72,7 @@ int main(int argc, char *argv[])
 //    saveImageToFile("Output/Random.png", random_pixels(RGBimage), 256, 256);
 //    return 1;
 
-<<<<<<< HEAD
-    saveImageToFile("Output/RECONSTRUCTION.png", stylit.run(srcImg, tgtImg, 2), tgtImg.width, tgtImg.height);
-=======
     saveImageToFile("Output/RECONSTRUCTION.png", stylit.run(srcImg, tgtImg, num_iterations), original_tgt_width, original_tgt_height);
->>>>>>> scaling
 
     MainWindow w;
     w.show();
