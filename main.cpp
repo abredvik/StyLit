@@ -40,19 +40,19 @@ int main(int argc, char *argv[])
 
     std::vector<QString> srcPaths;
     srcPaths.reserve(5);
-    srcPaths.push_back(srcFolder + "/color.bmp");
-    srcPaths.push_back(srcFolder + "/LPE1.bmp");
-    srcPaths.push_back(srcFolder + "/LPE2.bmp");
-    srcPaths.push_back(srcFolder + "/LPE3.bmp");
+    srcPaths.push_back(srcFolder + "/color.png");
+    srcPaths.push_back(srcFolder + "/LPE1.png");
+    srcPaths.push_back(srcFolder + "/LPE2.png");
+    srcPaths.push_back(srcFolder + "/LPE3.png");
     srcPaths.push_back(stylization);
 
     std::vector<QString> tgtPaths;
     srcPaths.reserve(5);
-    tgtPaths.push_back(tgtFolder + "/color.bmp");
-    tgtPaths.push_back(tgtFolder + "/LPE1.bmp");
-    tgtPaths.push_back(tgtFolder + "/LPE2.bmp");
-    tgtPaths.push_back(tgtFolder + "/LPE3.bmp");
-    tgtPaths.push_back("Data/Guy/black_square.bmp");
+    tgtPaths.push_back(tgtFolder + "/color.png");
+    tgtPaths.push_back(tgtFolder + "/LPE1.png");
+    tgtPaths.push_back(tgtFolder + "/LPE2.png");
+    tgtPaths.push_back(tgtFolder + "/LPE3.png");
+    tgtPaths.push_back("Data/Guy_cropped/black_square_cropped.png");
 
     Image srcImg, tgtImg;
     init_image(srcPaths, srcImg, num_iterations);

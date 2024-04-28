@@ -116,8 +116,9 @@ void Stylit::stylit_algorithm(const Image& src, Image& tgt, int current_iteratio
         NNF_t temp_NNF = patchmatcher.patch_match(src, tgt, unmatched);
         int k = 0.7 * patchmatcher.errors.size();
         //int k = calculate_error_budget(patchmatcher.errors);
+        std::cout << k << std::endl;
 
-        for (int i = 0; i < k; i++){
+        for (int i = 0; i < std::min((int)patchmatcher.errors.size(), k); i++){
             int source_index = patchmatcher.errors[i].first;
 
             int target_index = pos_to_index(temp_NNF[source_index] + index_to_position(source_index, src.width), tgt.width);
@@ -149,6 +150,15 @@ void Stylit::stylit_algorithm(const Image& src, Image& tgt, int current_iteratio
     for(int i = 0; i < (tgt.width * tgt.height); i ++){
         if (tgt.patches_original[i]->is_matched){
             new_image[i] = average(i, src, tgt);
+//            Vector2i offset = final_reverse_NNF[i];
+//            Vector2i xy = index_to_position(i, tgt.width);
+//            int source_index = pos_to_index(xy + offset, src.width);
+//            float r, g, b;
+//            r = g = b = 0;
+//            r = src.patches_stylized[source_index]->buffer[36];
+//            g = src.patches_stylized[source_index]->buffer[37];
+//            b = src.patches_stylized[source_index]->buffer[38];
+//            new_image[i] = toRGBA(Vector3f(r, g, b));
         }
     }
 
@@ -168,14 +178,15 @@ struct compare {
 
 int Stylit::calculate_error_budget(std::vector<std::pair<int, double>> &errors){
     std::sort(errors.begin(), errors.end(), compare());
-    int step_size = (errors.size()  + 50 - 1) / 50;
-    MatrixX2d l_matrix(50, 2);
-    VectorXd b_vector(50);
+    int num_steps = std::min((int)errors.size(), (int)50);
+    int step_size = (errors.size()  + num_steps - 1) / num_steps;
+    MatrixX2d l_matrix(num_steps, 2);
+    VectorXd b_vector(num_steps);
     double max_error = errors[errors.size() - 1].second;
 #pragma omp parallel for
     for (int i = 0; i < errors.size(); i += step_size) {
         l_matrix(i / step_size, 0) = 1.0;
-        l_matrix(i / step_size, 1) = -1.0 * ((i / step_size) / 50.0);
+        l_matrix(i / step_size, 1) = -1.0 * ((i / step_size) / (float)num_steps);
         b_vector(i / step_size) = 1.0 / (errors[i].second / max_error);
     }
 

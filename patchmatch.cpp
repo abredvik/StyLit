@@ -308,7 +308,7 @@ NNF_t Patchmatcher::patch_match(const Image& src, const Image& tgt, std::unorder
     // fill NNF randomly
     NNF_t NNF;
     int imgSize = src.patches_original.size();
-    int numIterations = 2;
+    int numIterations = 6;
 
     randomize_NNF(NNF, imgSize, src.width, tgt.width, available_patches);
 
