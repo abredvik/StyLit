@@ -27,15 +27,15 @@ struct Image {
     int width;
     int height;
     std::vector<Patch*> patches_original;
-    std::vector<Patch*> patches_LPE1;
-    std::vector<Patch*> patches_LPE2;
-    std::vector<Patch*> patches_LPE3;
-    std::vector<Patch*> patches_LPE4;
+//    std::vector<Patch*> patches_LPE1;
+//    std::vector<Patch*> patches_LPE2;
+//    std::vector<Patch*> patches_LPE3;
+//    std::vector<Patch*> patches_LPE4;
     std::vector<Patch*> patches_stylized;
     Pyramid_t *pyramid;
 };
 
-std::tuple<std::vector<RGBA>, int, int> loadImageFromFile(const QString &file);
+std::tuple<std::vector<RGBA>*, int, int> loadImageFromFile(const QString &file);
 
 /**
  * @brief Saves the current canvas image to the specified file path.

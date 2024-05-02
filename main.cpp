@@ -46,7 +46,6 @@ int main(int argc, char *argv[])
     srcPaths.push_back(srcFolder + "LPE2.bmp");
     srcPaths.push_back(srcFolder + "LPE3.bmp");
     srcPaths.push_back(srcFolder + "LPE4.png");
-    srcPaths.push_back(stylization);
 
     std::vector<QString> tgtPaths;
     srcPaths.reserve(6);
@@ -55,11 +54,10 @@ int main(int argc, char *argv[])
     tgtPaths.push_back(tgtFolder + "LPE2.bmp");
     tgtPaths.push_back(tgtFolder + "LPE3.bmp");
     tgtPaths.push_back(tgtFolder + "LPE4.png");
-    tgtPaths.push_back(tgtFolder + "black_square.bmp");
 
     Image srcImg, tgtImg;
-    init_image(srcPaths, srcImg, num_iterations);
-    init_image(tgtPaths, tgtImg, num_iterations);
+    init_image(srcPaths, stylization, srcImg, num_iterations);
+    init_image(tgtPaths, tgtFolder + "black_square.bmp", tgtImg, num_iterations);
 
     int original_tgt_width = tgtImg.width;
     int original_tgt_height = tgtImg.height;

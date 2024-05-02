@@ -23,12 +23,14 @@ public:
     double mu = 2;
 };
 
-double Energy(const std::vector<VectorXf*>& A, const std::vector<VectorXf*>& B,
+double Energy(const VectorXf& A, const VectorXf& B,
               const VectorXf& Aprime, const VectorXf& Bprime, double mu);
 
 double Distance(const VectorXf& A, const VectorXf& B);
 
-std::vector<Patch*> get_patches(const std::vector<RGBA>& img, int width, int height);
+std::pair<std::vector<Patch*>, std::vector<Patch*>> get_patches(const std::vector<std::vector<RGBA>>& LPEs,
+                                                                const std::vector<RGBA>& style,
+                                                                int window_width, int width, int height);
 
 std::vector<RGBA> recreate_image(NNF_t NNF, const Image& target);
 

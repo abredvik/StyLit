@@ -1,7 +1,7 @@
 #include "util.h"
 #include <random>
 
-std::tuple<std::vector<RGBA>, int, int> loadImageFromFile(const QString &file) {
+std::tuple<std::vector<RGBA>*, int, int> loadImageFromFile(const QString &file) {
     QImage myImage;
     if (!myImage.load(file)) {
         throw std::runtime_error("Failed to load in image");
@@ -11,10 +11,10 @@ std::tuple<std::vector<RGBA>, int, int> loadImageFromFile(const QString &file) {
     int height = myImage.height();
     QByteArray arr = QByteArray::fromRawData((const char*) myImage.bits(), myImage.sizeInBytes());
 
-    std::vector<RGBA> data;
-    data.reserve(width * height);
+    std::vector<RGBA>* data = new std::vector<RGBA>;
+    data->reserve(width * height);
     for (int i = 0; i < arr.size() / 4.f; i++){
-        data.push_back(RGBA{(std::uint8_t) arr[4*i], (std::uint8_t) arr[4*i+1], (std::uint8_t) arr[4*i+2], (std::uint8_t) arr[4*i+3]});
+        data->push_back(RGBA{(std::uint8_t) arr[4*i], (std::uint8_t) arr[4*i+1], (std::uint8_t) arr[4*i+2], (std::uint8_t) arr[4*i+3]});
     }
 
     return std::make_tuple(data, width, height);

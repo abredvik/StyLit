@@ -6,8 +6,6 @@ using namespace Eigen;
 
 #include "rgba.h"
 #include "util.h"
-#include "patchmatch.h"
-#include "gaussianpyramid.h"
 
 class Stylit
 {
@@ -31,9 +29,13 @@ public:
 
     std::vector<RGBA> run(Image& src, Image& tgt, int iterations);
 
-    Vector2i nearest_neighbor(const Image& src, std::vector<VectorXf*> tgt_patches, const VectorXf& tgt_style, Vector2i xy);
+    Vector2i nearest_neighbor(const Image& src, const VectorXf& tgt_patch, const VectorXf& tgt_style, Vector2i xy);
+
+private:
+    int window_width = 5;
+    double mu = 2.0;
 };
 
-void init_image(const std::vector<QString>& filepath, Image& img, int num_iterations);
+void init_image(const std::vector<QString>& LPEnames, const QString styleName, Image& img, int num_iterations);
 
 #endif // STYLIT_H
