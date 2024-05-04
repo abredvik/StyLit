@@ -101,7 +101,7 @@ void Stylit::stylit_algorithm(const Image& src, Image& tgt, int current_iteratio
             k = calculate_k(patchmatcher.errors);
         }
 
-        std::cout << "k = " << k << " < " << patchmatcher.errors.size() << " = errors.size()" << std::endl;
+        //std::cout << "k = " << k << " < " << patchmatcher.errors.size() << " = errors.size()" << std::endl;
 
 
         std::unordered_set<int> matched_target_indices;
@@ -110,7 +110,7 @@ void Stylit::stylit_algorithm(const Image& src, Image& tgt, int current_iteratio
         for (int i = 0; i < (int)std::min(k, patchmatcher.errors.size()); i++){
             sum_errors += patchmatcher.errors[i].second;
             if (sum_errors > T) {
-                std::cout << "error budget reached at i = " << i << std::endl;
+                //std::cout << "error budget reached at i = " << i << std::endl;
                 break;
             }
 
@@ -132,8 +132,8 @@ void Stylit::stylit_algorithm(const Image& src, Image& tgt, int current_iteratio
 
         }
 
-        std::cout << "number of unique targets matched: " << matched_target_indices.size() << std::endl;
-        std::cout << "targets covered: " << targets_covered << std::endl;
+        //std::cout << "number of unique targets matched: " << matched_target_indices.size() << std::endl;
+        //std::cout << "targets covered: " << targets_covered << std::endl;
         percent_coverage = (float) targets_covered / (float) total_targets;
 
         std::cout << percent_coverage << std::endl;
@@ -151,7 +151,7 @@ void Stylit::stylit_algorithm(const Image& src, Image& tgt, int current_iteratio
 
     tgt.pyramid->style[current_iteration] = new_image;
 
-    std::cout << "done with stylit algorithm" << std::endl;
+    //std::cout << "done with stylit algorithm" << std::endl;
 
 }
 

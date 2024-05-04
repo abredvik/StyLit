@@ -32,6 +32,10 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         convolve.h convolve.cpp
         gaussianpyramid.h gaussianpyramid.cpp
         scale.h scale.cpp
+        brush.h brush.cpp
+        canvas2d.h canvas2d.cpp
+        settings.h settings.cpp
+        common.h common.cpp
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET StyLit APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR

@@ -3,6 +3,7 @@
 
 #include "rgba.h"
 #include "scale.h"
+#include <vector>
 
 typedef struct Pyramid{
     std::vector<std::vector<std::vector<RGBA>>> LPEs;
