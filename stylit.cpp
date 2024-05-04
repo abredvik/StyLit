@@ -184,6 +184,7 @@ int Stylit::calculate_k(std::vector<std::pair<int, double>> &errors){
 
 std::pair<int, double> Stylit::calculate_k_and_error_budget(std::vector<std::pair<int, double>> &errors){
     int k = calculate_k(errors);
+    if (k < 0 || k > errors.size()) k = errors.size();
     double T = 0.0;
     for (int i = 0; i < k; ++i) {
         T += errors[i].second;

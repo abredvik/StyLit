@@ -2,6 +2,7 @@
 #define COMMON_H
 
 #include <array>
+#include <cstdint>
 
 //Canvas2D c;
 class Common

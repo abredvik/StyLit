@@ -19,7 +19,7 @@ public:
     float gaussian_func(float x);
     std::vector<float> gaussian_kernel(int radius);
     auto& getPixelRepeated(auto& data, int width, int height, int x, int y);
-    std::vector<RGBA> sharpen(std::vector<RGBA> stylized_image_RGBA, int width, int height, std::vector<float> blur_kernel);
+    std::vector<RGBA> sharpen(std::vector<RGBA> stylized_image_RGBA, int width, int height);
 };
 
 #endif // CONVOLVE_H

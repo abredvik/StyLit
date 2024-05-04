@@ -280,8 +280,7 @@ void MainWindow::onStylizeButtonClick() {
 
     //sharpen
     Convolve convolve;
-    std::vector<float> blur_kernel =  {1.f/9.f, 1/9.f, 1/9.f, 1.f/9.f, 1/9.f, 1.f/9.f, 1/9.f, 1/9.f, 1.f/9.f};
-    final_image = convolve.sharpen(final_image, 512, 512, blur_kernel);
+    final_image = convolve.sharpen(final_image, 512, 512);
 
     // save image
     saveImageToFile("Output/RECONSTRUCTION.png", final_image, 512, 512);

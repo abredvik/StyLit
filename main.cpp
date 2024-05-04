@@ -77,16 +77,15 @@ int main(int argc, char *argv[])
 
         // or just use output of stylit
         Convolve convolve;
-        std::vector<float> blur_kernel =  {1.f/5.f, 1/5.f, 1/5.f, 1.f/5.f, 1/5.f};
-        std::vector<RGBA> sharpened = convolve.sharpen(stylized_image_RGBA, original_tgt_width, original_tgt_height, blur_kernel);
+        std::vector<RGBA> sharpened = convolve.sharpen(stylized_image_RGBA, original_tgt_width, original_tgt_height);
 
         saveImageToFile("Output/RECONSTRUCTION.png", sharpened, original_tgt_width, original_tgt_height);
-
-
+        return 0;
     } else if (args.size() == 0) { // if no config file - have user draw
         MainWindow w;
         w.show();
         a.exec();
+        return 0;
     } else {
         std::cout << "Too many arguments. Please just either nothing or a path to a config file (.ini) as a command-line argument." << std::endl;
         a.exit(1);

@@ -74,7 +74,7 @@ std::vector<float> Convolve::gaussian_kernel(int radius) {
     return res;
 }
 
-std::vector<RGBA> Convolve::sharpen(std::vector<RGBA> stylized_image_RGBA, int width, int height, std::vector<float> blur_kernel){
+std::vector<RGBA> Convolve::sharpen(std::vector<RGBA> stylized_image_RGBA, int width, int height){
 
     //convert to floats
     std::vector<Vector3f> stylized_image_float(stylized_image_RGBA.size());
@@ -84,6 +84,7 @@ std::vector<RGBA> Convolve::sharpen(std::vector<RGBA> stylized_image_RGBA, int w
 
     // blur image
     Convolve convolve;
+    std::vector<float> blur_kernel = gaussian_kernel(5);
     std::vector<Vector3f> blurred_image = convolve.convolve(stylized_image_float, width, blur_kernel, true);
     blurred_image = convolve.convolve(blurred_image, height, blur_kernel, false);
 

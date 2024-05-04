@@ -1,4 +1,5 @@
 #include "common.h"
+#include <cmath>
 
 /**
  * @brief Canvas2D::pos_to_index returns an index based on the given x and y coordinates
