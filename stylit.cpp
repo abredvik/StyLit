@@ -8,7 +8,7 @@ Stylit::Stylit()
 
 }
 
-void init_image(const std::vector<QString>& LPEnames, const QString styleName, Image& img, int num_iterations) {
+void init_image(const std::vector<QString>& LPEnames, std::vector<RGBA> style_image, Image& img, int num_iterations) {
 //#pragma omp parallel for
     Gaussianpyramid gaussianpyramid;
     img.pyramid = new Pyramid_t();
@@ -18,15 +18,14 @@ void init_image(const std::vector<QString>& LPEnames, const QString styleName, I
     }
 
     // do gaussian pyramid for stylized image
-    auto styleTup = loadImageFromFile(styleName);
-    img.width = std::get<1>(styleTup);
-    img.height = std::get<2>(styleTup);
-    img.pyramid->style =  gaussianpyramid.create_pyrimid(num_iterations, *std::get<0>(styleTup), img.width, img.height);
+    img.pyramid->style =  gaussianpyramid.create_pyrimid(num_iterations, style_image, img.width, img.height);
 
     // do gaussian pyramids
     for (int i = 0; i < LPEnames.size(); ++i) {
         const QString& filename  = LPEnames[i];
         auto LPEtup = loadImageFromFile(filename);
+//        img.width = std::get<1>(LPEtup);
+//        img.height = std::get<2>(LPEtup);
         const std::vector<std::vector<RGBA>>& pyr = gaussianpyramid.create_pyrimid(num_iterations, *std::get<0>(LPEtup), img.width, img.height);
         for (int j = 0; j < pyr.size(); ++j) {
             img.pyramid->LPEs[j][i] = pyr[j];

@@ -36,6 +36,6 @@ private:
     double mu = 2.0;
 };
 
-void init_image(const std::vector<QString>& LPEnames, const QString styleName, Image& img, int num_iterations);
+void init_image(const std::vector<QString>& LPEnames, std::vector<RGBA> style_image, Image& img, int num_iterations);
 
 #endif // STYLIT_H

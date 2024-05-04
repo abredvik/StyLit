@@ -23,12 +23,18 @@ MainWindow::MainWindow()
     settings.loadSettingsOrDefaults();
 
     QHBoxLayout *hLayout = new QHBoxLayout(); // horizontal layout for canvas and controls panel
+    QHBoxLayout *hLayout_output = new QHBoxLayout(); // horizontal layout for canvas and controls panel
     QVBoxLayout *vLayout = new QVBoxLayout(); // vertical layout for control panel
+    QVBoxLayout *vLayout_output = new QVBoxLayout(); // vertical layout for control panel
 
     vLayout->setAlignment(Qt::AlignTop);
-
     hLayout->addLayout(vLayout);
+
+    //vLayout_output->setAlignment(Qt::AlignBottom);
+    //hLayout_output->addLayout(vLayout_output);
+
     setLayout(hLayout);
+    //setLayout(hLayout_output);
 
     setupCanvas2D();
     resize(800, 600);
@@ -36,8 +42,10 @@ MainWindow::MainWindow()
     // makes the canvas into a scroll area
     QScrollArea *scrollArea = new QScrollArea();
     scrollArea->setWidget(m_canvas);
+    //scrollArea->setWidget(m_canvas_output);
     scrollArea->setWidgetResizable(true);
     hLayout->addWidget(scrollArea, 1);
+
 
     // groupings by project
     QWidget *brushGroup = new QWidget();
@@ -100,6 +108,15 @@ void MainWindow::setupCanvas2D() {
     if (!settings.imagePath.isEmpty()) {
         m_canvas->loadImageFromFile(settings.imagePath);
     }
+
+
+//    m_canvas_output = new Canvas2D();
+//    m_canvas_output->init();
+//    if (!settings.imagePath.isEmpty()) {
+//        m_canvas_output->loadImageFromFile(settings.imagePath);
+//    }
+//    m_canvas_output->m_data.assign(m_canvas_output->m_width * m_canvas_output->m_height, RGBA{150, 255, 255, 255});
+
 }
 
 
@@ -247,42 +264,42 @@ void MainWindow::onStylizeButtonClick() {
     m_canvas->m_width = 128;
     m_canvas->m_height = 128;
 
-    // save drawing
-    QString file = QFileDialog::getSaveFileName(this, tr("Save Image"), QDir::currentPath(), tr("Image Files (*.png *.jpg *.jpeg)"));
-    m_canvas->saveImageToFile(file);
-    //saveImageToFile("Drawings/RECONSTRUCTION.png", m_canvas->m_data, 512, 512);
-
     int num_iterations = 6;
 
     std::vector<QString> srcPaths;
-    srcPaths.reserve(6);
+    srcPaths.reserve(5);
 
     std::vector<QString> tgtPaths;
-    srcPaths.reserve(6);
+    srcPaths.reserve(5);
 
     const QString srcFolder = "Data/Sphere_128/";
-    QString tgtFolder = "Data/Guy_128/";
-    const QString stylization = file;
+    QString tgtFolder; // TO DO: user selection
 
-//    switch(settings.targetMeshType) {
-//    case MESH_GUY:
-//        tgtFolder = "Data/Guy_128/";
-//        break;
-//    case MESH_TEAPOT:
-//        tgtFolder = "Data/Teapot_128/";
-//        break;
-//    case MESH_ARMADILLO:
-//        tgtFolder = "Data/Armadillo_128/";
-//        break;
-//    case MESH_BUNNY:
-//        tgtFolder = "Data/Bunny_128/";
-//        break;
-//    case MESH_BELLPEPPER:
-//        tgtFolder = "Data/Bellpepper_128/";
-//        break;
-//    default:
-//        tgtFolder = "Data/Guy_128/";
-//    }
+    auto blackTup = loadImageFromFile(tgtFolder + "black_square.bmp");
+    std::vector<RGBA> black_RGBA =  *std::get<0>(blackTup);
+
+    Image srcImg, tgtImg;
+    tgtImg.width = 128;
+    tgtImg.height = 128;
+    srcImg.width = 128;
+    srcImg.height = 128;
+
+    switch(settings.targetMeshType) {
+    case MESH_TEAPOT:
+        tgtFolder = "Data/Teapot_128/";
+        break;
+    case MESH_ARMADILLO:
+        tgtFolder = "Data/Armadillo_128/";
+        break;
+    case MESH_BUNNY:
+        tgtFolder = "Data/Bunny_128/";
+        break;
+    case MESH_BELLPEPPER:
+        tgtFolder = "Data/Bellpepper_128/";
+        break;
+    default:
+        tgtFolder = "Data/Guy_128/";
+    }
 
     srcPaths.push_back(srcFolder + "color.bmp");
     srcPaths.push_back(srcFolder + "LPE1.bmp");
@@ -296,9 +313,8 @@ void MainWindow::onStylizeButtonClick() {
     tgtPaths.push_back(tgtFolder + "LPE3.bmp");
     tgtPaths.push_back(tgtFolder + "LPE4.png");
 
-    Image srcImg, tgtImg;
-    init_image(srcPaths, stylization, srcImg, num_iterations);
-    init_image(tgtPaths, tgtFolder + "black_square.bmp", tgtImg, num_iterations);
+    init_image(srcPaths, m_canvas->m_data, srcImg, num_iterations);
+    init_image(tgtPaths, black_RGBA, tgtImg, num_iterations);
 
     Stylit stylit;
     std::vector<RGBA> stylized_image_RGBA = stylit.run(srcImg, tgtImg, num_iterations);
@@ -310,6 +326,11 @@ void MainWindow::onStylizeButtonClick() {
     Convolve convolve;
     final_image = convolve.sharpen(final_image, 512, 512);
 
-    // save image
     saveImageToFile("Output/RECONSTRUCTION.png", final_image, 512, 512);
+
+    // save image
+    m_canvas->m_width = 512;
+    m_canvas->m_height = 512;
+    m_canvas->m_data = final_image;
+    m_canvas->displayImage();
 }

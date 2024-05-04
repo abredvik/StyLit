@@ -23,6 +23,7 @@ public:
 private:
     void setupCanvas2D();
     Canvas2D *m_canvas;
+    Canvas2D *m_canvas_output;
 
     void addHeading(QBoxLayout *layout, QString text);
     void addLabel(QBoxLayout *layout, QString text);
