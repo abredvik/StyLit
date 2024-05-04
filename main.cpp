@@ -35,6 +35,8 @@ int main(int argc, char *argv[])
         std::vector<QString> tgtPaths;
         srcPaths.reserve(6);
 
+        Image srcImg, tgtImg;
+
         // get settings file
         QSettings settings(args[0], QSettings::IniFormat);
 
@@ -43,6 +45,17 @@ int main(int argc, char *argv[])
         const QString srcFolder = settings.value("source/folderPath").toString();
         const QString tgtFolder = settings.value("target/folderPath").toString();
         const QString stylization = settings.value("style/filePath").toString();
+
+        auto styleTup = loadImageFromFile(stylization);
+        std::vector<RGBA> style_RGBA = *std::get<0>(styleTup);
+        srcImg.width = std::get<1>(styleTup);
+        srcImg.height = std::get<2>(styleTup);
+
+        auto blackTup = loadImageFromFile(tgtFolder + "black_square.bmp");
+        std::vector<RGBA> black_RGBA =  *std::get<0>(blackTup);
+        tgtImg.width = std::get<1>(blackTup);
+        tgtImg.height = std::get<2>(blackTup);
+
 
         srcPaths.push_back(srcFolder + "color.bmp");
         srcPaths.push_back(srcFolder + "LPE1.bmp");
@@ -56,15 +69,14 @@ int main(int argc, char *argv[])
         tgtPaths.push_back(tgtFolder + "LPE3.bmp");
         tgtPaths.push_back(tgtFolder + "LPE4.png");
 
-        Image srcImg, tgtImg;
-        init_image(srcPaths, stylization, srcImg, num_iterations);
-        init_image(tgtPaths, tgtFolder + "black_square.bmp", tgtImg, num_iterations);
+        init_image(srcPaths, style_RGBA, srcImg, num_iterations);
+        init_image(tgtPaths, black_RGBA, tgtImg, num_iterations);
 
         int original_tgt_width = tgtImg.width;
         int original_tgt_height = tgtImg.height;
 
         Stylit stylit;
-        std::vector<RGBA> stylized_image_RGBA = stylit.run(srcImg, tgtImg, num_iterations);
+        std::vector<RGBA> final_image_RGBA = stylit.run(srcImg, tgtImg, num_iterations);
         //saveImageToFile("Output/RECONSTRUCTION.png", stylized_image_RGBA, original_tgt_width, original_tgt_height);
 
         // sharpening:
@@ -74,12 +86,10 @@ int main(int argc, char *argv[])
         //    const std::vector<RGBA>& RGBimage = std::get<0>(tup);
         //    std::vector<RGBA> stylized_image_RGBA = RGBimage;
 
-
         // or just use output of stylit
         Convolve convolve;
         std::vector<float> blur_kernel =  {1.f/5.f, 1/5.f, 1/5.f, 1.f/5.f, 1/5.f};
-        std::vector<RGBA> sharpened = convolve.sharpen(stylized_image_RGBA, original_tgt_width, original_tgt_height, blur_kernel);
-
+        std::vector<RGBA> sharpened = convolve.sharpen(final_image_RGBA, original_tgt_width, original_tgt_height, blur_kernel);
         saveImageToFile("Output/RECONSTRUCTION.png", sharpened, original_tgt_width, original_tgt_height);
 
 
@@ -92,4 +102,6 @@ int main(int argc, char *argv[])
         a.exit(1);
         return 1;
     }
+
+    return 0;
 }

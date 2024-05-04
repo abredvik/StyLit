@@ -33,7 +33,6 @@ public:
 
     std::vector<RGBA> m_data;
 
-
 private:
     //std::vector<RGBA> m_data;
 
