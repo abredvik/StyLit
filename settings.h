@@ -24,6 +24,14 @@ enum BrushType {
     NUM_BRUSH_TYPES
 };
 
+enum TargetMeshType {
+    MESH_GUY,
+    MESH_TEAPOT,
+    MESH_ARMADILLO,
+    MESH_BELLPEPPER,
+    MESH_BUNNY,
+};
+
 /**
  * @struct Settings
  *
@@ -61,6 +69,8 @@ struct Settings {
 
     void loadSettingsOrDefaults();
     void saveSettings();
+
+    int targetMeshType;
 };
 
 // The global Settings object, will be initialized by MainWindow

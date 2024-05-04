@@ -68,15 +68,6 @@ MainWindow::MainWindow()
     addSpinBox(brushLayout, "alpha", 0, 255, 1, settings.brushColor.a, [this](int value){ setUIntVal(settings.brushColor.a, value); });
     addSpinBox(brushLayout, "radius", 0, 100, 1, settings.brushRadius, [this](int value){ setIntVal(settings.brushRadius, value); });
 
-    // extra credit brushes
-//    addHeading(brushLayout, "Extra Credit Brushes");
-//    addRadioButton(brushLayout, "Spray", settings.brushType == BRUSH_SPRAY, [this]{ setBrushType(BRUSH_SPRAY); });
-//    addSpinBox(brushLayout, "density", 0, 100, 1, settings.brushDensity, [this](int value){ setIntVal(settings.brushDensity, value); });
-//    addRadioButton(brushLayout, "Speed", settings.brushType == BRUSH_SPEED, [this]{ setBrushType(BRUSH_SPEED); });
-//    addRadioButton(brushLayout, "Fill", settings.brushType == BRUSH_FILL, [this]{ setBrushType(BRUSH_FILL); });
-//    addRadioButton(brushLayout, "Custom", settings.brushType == BRUSH_CUSTOM, [this]{ setBrushType(BRUSH_CUSTOM); });
-//    addCheckBox(brushLayout, "Fix alpha blending", settings.fixAlphaBlending, [this](bool value){ setBoolVal(settings.fixAlphaBlending, value); });
-
     // clearing canvas
     addPushButton(brushLayout, "Clear canvas", &MainWindow::onClearButtonClick);
 
@@ -85,6 +76,14 @@ MainWindow::MainWindow()
 
     // save canvas as image
     addPushButton(brushLayout, "Save Image", &MainWindow::onSaveButtonClick);
+
+    // Target Mesh selection
+    addHeading(brushLayout, "Target Mesh");
+    addRadioButton(brushLayout, "Guy", settings.targetMeshType == MESH_GUY, [this]{ setTargetMeshType(MESH_GUY); });
+    addRadioButton(brushLayout, "Tea Pot", settings.targetMeshType == MESH_TEAPOT, [this]{ setTargetMeshType(MESH_TEAPOT); });
+    addRadioButton(brushLayout, "Armadillo", settings.targetMeshType == MESH_ARMADILLO, [this]{ setTargetMeshType(MESH_ARMADILLO); });
+    addRadioButton(brushLayout, "Bunny", settings.targetMeshType == MESH_BUNNY, [this]{ setTargetMeshType(MESH_BUNNY); });
+    addRadioButton(brushLayout, "Bell Pepper", settings.targetMeshType == MESH_BELLPEPPER, [this]{ setTargetMeshType(MESH_BELLPEPPER); });
 
     // stylize with image
     addPushButton(brushLayout, "Stylize Drawing", &MainWindow::onStylizeButtonClick);
@@ -178,6 +177,11 @@ void MainWindow::setBrushType(int type) {
     m_canvas->settingsChanged();
 }
 
+void MainWindow::setTargetMeshType(int type) {
+    settings.targetMeshType = type;
+    m_canvas->settingsChanged();
+}
+
 void MainWindow::setUIntVal(std::uint8_t &setValue, int newValue) {
     setValue = newValue;
     m_canvas->settingsChanged();
@@ -231,6 +235,10 @@ void MainWindow::onSaveButtonClick() {
     m_canvas->saveImageToFile(file);
 }
 
+void MainWindow::onTargetMeshButtonClick() {
+
+}
+
 void MainWindow::onStylizeButtonClick() {
 
     //scale down to 128
@@ -253,8 +261,28 @@ void MainWindow::onStylizeButtonClick() {
     srcPaths.reserve(6);
 
     const QString srcFolder = "Data/Sphere_128/";
-    const QString tgtFolder = "Data/Guy_128/"; // TO DO: user selection
+    QString tgtFolder = "Data/Guy_128/";
     const QString stylization = file;
+
+//    switch(settings.targetMeshType) {
+//    case MESH_GUY:
+//        tgtFolder = "Data/Guy_128/";
+//        break;
+//    case MESH_TEAPOT:
+//        tgtFolder = "Data/Teapot_128/";
+//        break;
+//    case MESH_ARMADILLO:
+//        tgtFolder = "Data/Armadillo_128/";
+//        break;
+//    case MESH_BUNNY:
+//        tgtFolder = "Data/Bunny_128/";
+//        break;
+//    case MESH_BELLPEPPER:
+//        tgtFolder = "Data/Bellpepper_128/";
+//        break;
+//    default:
+//        tgtFolder = "Data/Guy_128/";
+//    }
 
     srcPaths.push_back(srcFolder + "color.bmp");
     srcPaths.push_back(srcFolder + "LPE1.bmp");
@@ -284,14 +312,4 @@ void MainWindow::onStylizeButtonClick() {
 
     // save image
     saveImageToFile("Output/RECONSTRUCTION.png", final_image, 512, 512);
-
-    // display image
-//    m_canvas->m_data =  final_image;
-//    m_canvas->m_width = 512;
-//    m_canvas->m_height = 512;
-//    QByteArray* img = new QByteArray(reinterpret_cast<const char*>(m_canvas->m_data.data()), 4*m_canvas->m_data.size());
-//    QImage now = QImage((const uchar*)img->data(), m_canvas->m_width, m_canvas->m_height, QImage::Format_RGBX8888);
-//    m_canvas->setPixmap(QPixmap::fromImage(now));
-//    setFixedSize(m_canvas->m_width, m_canvas->m_height);
-//    update();
 }

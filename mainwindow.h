@@ -45,6 +45,9 @@ private slots:
     void onUploadButtonClick();
     void onSaveButtonClick();
 
+    void onTargetMeshButtonClick();
     void onStylizeButtonClick();
+
+    void setTargetMeshType(int type);
 };
 #endif // MAINWINDOW_H
