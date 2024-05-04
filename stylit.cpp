@@ -131,7 +131,7 @@ void Stylit::stylit_algorithm(const Image& src, Image& tgt, int current_iteratio
             k = calculate_k(patchmatcher.errors);
         }
 
-        std::cout << "k = " << k << " < " << patchmatcher.errors.size() << " = errors.size()" << std::endl;
+        //std::cout << "k = " << k << " < " << patchmatcher.errors.size() << " = errors.size()" << std::endl;
 
 
         std::unordered_set<int> matched_target_indices;
@@ -140,7 +140,7 @@ void Stylit::stylit_algorithm(const Image& src, Image& tgt, int current_iteratio
         for (int i = 0; i < std::min(k, (int)patchmatcher.errors.size()); i++){
             sum_errors += patchmatcher.errors[i].second;
             if (sum_errors > T) {
-                std::cout << "error budget reached at i = " << i << std::endl;
+                //std::cout << "error budget reached at i = " << i << std::endl;
                 break;
             }
 
