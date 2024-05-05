@@ -275,15 +275,6 @@ void MainWindow::onStylizeButtonClick() {
     const QString srcFolder = "Data/Sphere_128/";
     QString tgtFolder; // TO DO: user selection
 
-    auto blackTup = loadImageFromFile(tgtFolder + "black_square.bmp");
-    std::vector<RGBA> black_RGBA =  *std::get<0>(blackTup);
-
-    Image srcImg, tgtImg;
-    tgtImg.width = 128;
-    tgtImg.height = 128;
-    srcImg.width = 128;
-    srcImg.height = 128;
-
     switch(settings.targetMeshType) {
     case MESH_TEAPOT:
         tgtFolder = "Data/Teapot_128/";
@@ -301,17 +292,26 @@ void MainWindow::onStylizeButtonClick() {
         tgtFolder = "Data/Guy_128/";
     }
 
+    auto blackTup = loadImageFromFile(tgtFolder + "black_square.bmp");
+    std::vector<RGBA> black_RGBA =  *std::get<0>(blackTup);
+
+    Image srcImg, tgtImg;
+    tgtImg.width = 128;
+    tgtImg.height = 128;
+    srcImg.width = 128;
+    srcImg.height = 128;
+
     srcPaths.push_back(srcFolder + "color.bmp");
     srcPaths.push_back(srcFolder + "LPE1.bmp");
     srcPaths.push_back(srcFolder + "LPE2.bmp");
     srcPaths.push_back(srcFolder + "LPE3.bmp");
-    srcPaths.push_back(srcFolder + "LPE4.png");
+    srcPaths.push_back(srcFolder + "LPE4.bmp");
 
     tgtPaths.push_back(tgtFolder + "color.bmp");
     tgtPaths.push_back(tgtFolder + "LPE1.bmp");
     tgtPaths.push_back(tgtFolder + "LPE2.bmp");
     tgtPaths.push_back(tgtFolder + "LPE3.bmp");
-    tgtPaths.push_back(tgtFolder + "LPE4.png");
+    tgtPaths.push_back(tgtFolder + "LPE4.bmp");
 
     init_image(srcPaths, m_canvas->m_data, srcImg, num_iterations);
     init_image(tgtPaths, black_RGBA, tgtImg, num_iterations);

@@ -26,7 +26,7 @@ double Scale::triangle_filter(double x, double radius, float scale) {
     return prev_c1 + (prev_c2 * x_fabs);
 }
 
-RGBA Scale::back_map(std::vector<RGBA>& src, int width, int x, int y, float scale, bool x_dir) {
+RGBA Scale::back_map(const std::vector<RGBA> &src, int width, int x, int y, float scale, bool x_dir) {
     float radius = (scale > 1) ? 1.0 : 1.0 / scale;
     float interp = (x_dir) ? x : y;
     interp /= scale;
@@ -63,7 +63,7 @@ RGBA Scale::back_map(std::vector<RGBA>& src, int width, int x, int y, float scal
     return RGBA{red, green, blue, 255};
 }
 
-std::vector<RGBA> Scale::handle_scale(std::vector<RGBA> &image, int width, int height, float scaleX, float scaleY) {
+std::vector<RGBA> Scale::handle_scale(const std::vector<RGBA> &image, int width, int height, float scaleX, float scaleY) {
     int new_width = std::round((float)width * scaleX);
     std::vector<RGBA> resultX(new_width * height);
 

@@ -1,6 +1,6 @@
 #include "gaussianpyramid.h"
 
-std::vector<std::vector<RGBA>> Gaussianpyramid::create_pyrimid(int num_iterations, std::vector<RGBA> image, int width, int height){
+std::vector<std::vector<RGBA>> Gaussianpyramid::create_pyrimid(int num_iterations, const std::vector<RGBA>& image, int width, int height){
 
     std::vector<std::vector<RGBA>> result(num_iterations);
     result[num_iterations - 1] = image;
