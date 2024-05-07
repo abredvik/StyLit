@@ -202,10 +202,14 @@ void Canvas2D::pick_up(int x, int y){
     int mask_y = 0;
     for (int i = x - brush.radius; i <= x + brush.radius; i++){
         for (int j = y - brush.radius; j <= y + brush.radius; j++){
+            int index = common.pos_to_index(i, j, m_width);
+            int m_index = common.pos_to_index(mask_x, mask_y, (2*brush.radius) + 1);
             if(common.is_in_range(i, j)){
-                int index = common.pos_to_index(i, j, m_width);
-                int m_index = common.pos_to_index(mask_x, mask_y, (2*brush.radius) + 1);
                 brush.picked_up.at(m_index) = m_data.at(index);
+                mask_y = mask_y + 1;
+            } else{
+                //set alpha to 0
+                brush.picked_up.at(m_index).a = 0.f;
                 mask_y = mask_y + 1;
             }
         }
