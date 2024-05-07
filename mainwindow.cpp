@@ -14,6 +14,10 @@
 #include <QScrollArea>
 #include <QCheckBox>
 #include <iostream>
+#include <QButtonGroup>
+
+QButtonGroup *brushButtons = new QButtonGroup();
+QButtonGroup *meshButtons = new QButtonGroup();
 
 MainWindow::MainWindow()
 {
@@ -64,10 +68,10 @@ MainWindow::MainWindow()
 
     // brush selection
     addHeading(brushLayout, "Brush");
-    addRadioButton(brushLayout, "Constant", settings.brushType == BRUSH_CONSTANT, [this]{ setBrushType(BRUSH_CONSTANT); });
-    addRadioButton(brushLayout, "Linear", settings.brushType == BRUSH_LINEAR, [this]{ setBrushType(BRUSH_LINEAR); });
-    addRadioButton(brushLayout, "Quadratic", settings.brushType == BRUSH_QUADRATIC, [this]{ setBrushType(BRUSH_QUADRATIC); });
-    addRadioButton(brushLayout, "Smudge", settings.brushType == BRUSH_SMUDGE, [this]{ setBrushType(BRUSH_SMUDGE); });
+    addRadioButton(brushLayout, "Constant", settings.brushType == BRUSH_CONSTANT, [this]{ setBrushType(BRUSH_CONSTANT); }, true);
+    addRadioButton(brushLayout, "Linear", settings.brushType == BRUSH_LINEAR, [this]{ setBrushType(BRUSH_LINEAR); }, true);
+    addRadioButton(brushLayout, "Quadratic", settings.brushType == BRUSH_QUADRATIC, [this]{ setBrushType(BRUSH_QUADRATIC); }, true);
+    addRadioButton(brushLayout, "Smudge", settings.brushType == BRUSH_SMUDGE, [this]{ setBrushType(BRUSH_SMUDGE); }, true);
 
     // brush parameters
     addSpinBox(brushLayout, "red", 0, 255, 1, settings.brushColor.r, [this](int value){ setUIntVal(settings.brushColor.r, value); });
@@ -87,11 +91,11 @@ MainWindow::MainWindow()
 
     // Target Mesh selection
     addHeading(brushLayout, "Target Mesh");
-    addRadioButton(brushLayout, "Guy", settings.targetMeshType == MESH_GUY, [this]{ setTargetMeshType(MESH_GUY); });
-    addRadioButton(brushLayout, "Tea Pot", settings.targetMeshType == MESH_TEAPOT, [this]{ setTargetMeshType(MESH_TEAPOT); });
-    addRadioButton(brushLayout, "Armadillo", settings.targetMeshType == MESH_ARMADILLO, [this]{ setTargetMeshType(MESH_ARMADILLO); });
-    addRadioButton(brushLayout, "Bunny", settings.targetMeshType == MESH_BUNNY, [this]{ setTargetMeshType(MESH_BUNNY); });
-    addRadioButton(brushLayout, "Bell Pepper", settings.targetMeshType == MESH_BELLPEPPER, [this]{ setTargetMeshType(MESH_BELLPEPPER); });
+    addRadioButton(brushLayout, "Guy", settings.targetMeshType == MESH_GUY, [this]{ setTargetMeshType(MESH_GUY); }, false);
+    addRadioButton(brushLayout, "Tea Pot", settings.targetMeshType == MESH_TEAPOT, [this]{ setTargetMeshType(MESH_TEAPOT); }, false);
+    addRadioButton(brushLayout, "Armadillo", settings.targetMeshType == MESH_ARMADILLO, [this]{ setTargetMeshType(MESH_ARMADILLO); }, false);
+    addRadioButton(brushLayout, "Bunny", settings.targetMeshType == MESH_BUNNY, [this]{ setTargetMeshType(MESH_BUNNY); }, false);
+    addRadioButton(brushLayout, "Bell Pepper", settings.targetMeshType == MESH_BELLPEPPER, [this]{ setTargetMeshType(MESH_BELLPEPPER); }, false);
 
     // stylize with image
     addPushButton(brushLayout, "Stylize Drawing", &MainWindow::onStylizeButtonClick);
@@ -106,7 +110,7 @@ void MainWindow::setupCanvas2D() {
     m_canvas->init();
 
     if (!settings.imagePath.isEmpty()) {
-        m_canvas->loadImageFromFile(settings.imagePath);
+        m_canvas->loadImage(settings.imagePath);
     }
 
 
@@ -136,11 +140,16 @@ void MainWindow::addLabel(QBoxLayout *layout, QString text) {
     layout->addWidget(new QLabel(text));
 }
 
-void MainWindow::addRadioButton(QBoxLayout *layout, QString text, bool value, auto function) {
+void MainWindow::addRadioButton(QBoxLayout *layout, QString text, bool value, auto function, bool brush) {
     QRadioButton *button = new QRadioButton(text);
     button->setChecked(value);
     layout->addWidget(button);
     connect(button, &QRadioButton::clicked, this, function);
+    if(brush){
+        brushButtons->addButton(button);
+    } else {
+        meshButtons->addButton(button);
+    }
 }
 
 void MainWindow::addSpinBox(QBoxLayout *layout, QString text, int min, int max, int step, int val, auto function) {
@@ -228,7 +237,7 @@ void MainWindow::onClearButtonClick() {
 }
 
 void MainWindow::onRevertButtonClick() {
-    m_canvas->loadImageFromFile(settings.imagePath);
+    m_canvas->loadImage(settings.imagePath);
 }
 
 void MainWindow::onUploadButtonClick() {
@@ -238,7 +247,7 @@ void MainWindow::onUploadButtonClick() {
     settings.imagePath = file;
 
     // Display new image
-    m_canvas->loadImageFromFile(settings.imagePath);
+    m_canvas->loadImage(settings.imagePath);
 
     m_canvas->settingsChanged();
 }
@@ -286,7 +295,7 @@ void MainWindow::onStylizeButtonClick() {
         tgtFolder = "Data/Bunny_128/";
         break;
     case MESH_BELLPEPPER:
-        tgtFolder = "Data/Bellpepper_128/";
+        tgtFolder = "Data/Bell_Pepper_128/";
         break;
     default:
         tgtFolder = "Data/Guy_128_New/";
