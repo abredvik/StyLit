@@ -4,6 +4,7 @@
 #include "stylit.h"
 #include "convolve.h"
 #include "scale.h"
+#include "util.h"
 
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -14,6 +15,10 @@
 #include <QScrollArea>
 #include <QCheckBox>
 #include <iostream>
+#include <QButtonGroup>
+
+QButtonGroup *brushButtons = new QButtonGroup();
+QButtonGroup *meshButtons = new QButtonGroup();
 
 MainWindow::MainWindow()
 {
@@ -42,7 +47,6 @@ MainWindow::MainWindow()
     // makes the canvas into a scroll area
     QScrollArea *scrollArea = new QScrollArea();
     scrollArea->setWidget(m_canvas);
-    //scrollArea->setWidget(m_canvas_output);
     scrollArea->setWidgetResizable(true);
     hLayout->addWidget(scrollArea, 1);
 
@@ -58,16 +62,17 @@ MainWindow::MainWindow()
     controlsScroll->setWidget(tabs);
     controlsScroll->setWidgetResizable(true);
 
+
     tabs->addTab(brushGroup, "Brush");
 
     vLayout->addWidget(controlsScroll);
 
     // brush selection
     addHeading(brushLayout, "Brush");
-    addRadioButton(brushLayout, "Constant", settings.brushType == BRUSH_CONSTANT, [this]{ setBrushType(BRUSH_CONSTANT); });
-    addRadioButton(brushLayout, "Linear", settings.brushType == BRUSH_LINEAR, [this]{ setBrushType(BRUSH_LINEAR); });
-    addRadioButton(brushLayout, "Quadratic", settings.brushType == BRUSH_QUADRATIC, [this]{ setBrushType(BRUSH_QUADRATIC); });
-    addRadioButton(brushLayout, "Smudge", settings.brushType == BRUSH_SMUDGE, [this]{ setBrushType(BRUSH_SMUDGE); });
+    addRadioButton(brushLayout, "Constant", settings.brushType == BRUSH_CONSTANT, [this]{ setBrushType(BRUSH_CONSTANT); }, true);
+    addRadioButton(brushLayout, "Linear", settings.brushType == BRUSH_LINEAR, [this]{ setBrushType(BRUSH_LINEAR); }, true);
+    addRadioButton(brushLayout, "Quadratic", settings.brushType == BRUSH_QUADRATIC, [this]{ setBrushType(BRUSH_QUADRATIC); }, true);
+    addRadioButton(brushLayout, "Smudge", settings.brushType == BRUSH_SMUDGE, [this]{ setBrushType(BRUSH_SMUDGE); }, true);
 
     // brush parameters
     addSpinBox(brushLayout, "red", 0, 255, 1, settings.brushColor.r, [this](int value){ setUIntVal(settings.brushColor.r, value); });
@@ -87,11 +92,11 @@ MainWindow::MainWindow()
 
     // Target Mesh selection
     addHeading(brushLayout, "Target Mesh");
-    addRadioButton(brushLayout, "Guy", settings.targetMeshType == MESH_GUY, [this]{ setTargetMeshType(MESH_GUY); });
-    addRadioButton(brushLayout, "Tea Pot", settings.targetMeshType == MESH_TEAPOT, [this]{ setTargetMeshType(MESH_TEAPOT); });
-    addRadioButton(brushLayout, "Armadillo", settings.targetMeshType == MESH_ARMADILLO, [this]{ setTargetMeshType(MESH_ARMADILLO); });
-    addRadioButton(brushLayout, "Bunny", settings.targetMeshType == MESH_BUNNY, [this]{ setTargetMeshType(MESH_BUNNY); });
-    addRadioButton(brushLayout, "Bell Pepper", settings.targetMeshType == MESH_BELLPEPPER, [this]{ setTargetMeshType(MESH_BELLPEPPER); });
+    addRadioButton(brushLayout, "Guy", settings.targetMeshType == MESH_GUY, [this]{ setTargetMeshType(MESH_GUY); }, false);
+    addRadioButton(brushLayout, "Tea Pot", settings.targetMeshType == MESH_TEAPOT, [this]{ setTargetMeshType(MESH_TEAPOT); }, false);
+    addRadioButton(brushLayout, "Armadillo", settings.targetMeshType == MESH_ARMADILLO, [this]{ setTargetMeshType(MESH_ARMADILLO); }, false);
+    addRadioButton(brushLayout, "Bunny", settings.targetMeshType == MESH_BUNNY, [this]{ setTargetMeshType(MESH_BUNNY); }, false);
+    addRadioButton(brushLayout, "Bell Pepper", settings.targetMeshType == MESH_BELLPEPPER, [this]{ setTargetMeshType(MESH_BELLPEPPER); }, false);
 
     // stylize with image
     addPushButton(brushLayout, "Stylize Drawing", &MainWindow::onStylizeButtonClick);
@@ -106,17 +111,8 @@ void MainWindow::setupCanvas2D() {
     m_canvas->init();
 
     if (!settings.imagePath.isEmpty()) {
-        m_canvas->loadImageFromFile(settings.imagePath);
+        m_canvas->loadImage(settings.imagePath);
     }
-
-
-//    m_canvas_output = new Canvas2D();
-//    m_canvas_output->init();
-//    if (!settings.imagePath.isEmpty()) {
-//        m_canvas_output->loadImageFromFile(settings.imagePath);
-//    }
-//    m_canvas_output->m_data.assign(m_canvas_output->m_width * m_canvas_output->m_height, RGBA{150, 255, 255, 255});
-
 }
 
 
@@ -136,11 +132,16 @@ void MainWindow::addLabel(QBoxLayout *layout, QString text) {
     layout->addWidget(new QLabel(text));
 }
 
-void MainWindow::addRadioButton(QBoxLayout *layout, QString text, bool value, auto function) {
+void MainWindow::addRadioButton(QBoxLayout *layout, QString text, bool value, auto function, bool brush) {
     QRadioButton *button = new QRadioButton(text);
     button->setChecked(value);
     layout->addWidget(button);
     connect(button, &QRadioButton::clicked, this, function);
+    if(brush){
+        brushButtons->addButton(button);
+    } else {
+        meshButtons->addButton(button);
+    }
 }
 
 void MainWindow::addSpinBox(QBoxLayout *layout, QString text, int min, int max, int step, int val, auto function) {
@@ -228,7 +229,7 @@ void MainWindow::onClearButtonClick() {
 }
 
 void MainWindow::onRevertButtonClick() {
-    m_canvas->loadImageFromFile(settings.imagePath);
+    m_canvas->loadImage(settings.imagePath);
 }
 
 void MainWindow::onUploadButtonClick() {
@@ -238,7 +239,7 @@ void MainWindow::onUploadButtonClick() {
     settings.imagePath = file;
 
     // Display new image
-    m_canvas->loadImageFromFile(settings.imagePath);
+    m_canvas->loadImage(settings.imagePath);
 
     m_canvas->settingsChanged();
 }
@@ -275,7 +276,16 @@ void MainWindow::onStylizeButtonClick() {
     const QString srcFolder = "Data/Sphere_128/";
     QString tgtFolder; // TO DO: user selection
 
+    Image srcImg, tgtImg;
+    tgtImg.width = 128;
+    tgtImg.height = 128;
+    srcImg.width = 128;
+    srcImg.height = 128;
+
     switch(settings.targetMeshType) {
+    case MESH_GUY:
+        tgtFolder = "Data/Guy_128/";
+        break;
     case MESH_TEAPOT:
         tgtFolder = "Data/Teapot_128/";
         break;
@@ -286,20 +296,12 @@ void MainWindow::onStylizeButtonClick() {
         tgtFolder = "Data/Bunny_128/";
         break;
     case MESH_BELLPEPPER:
-        tgtFolder = "Data/Bellpepper_128/";
+        tgtFolder = "Data/Bell_Pepper_128/";
         break;
-    default:
-        tgtFolder = "Data/Guy_128/";
     }
 
     auto blackTup = loadImageFromFile(tgtFolder + "black_square.bmp");
     std::vector<RGBA> black_RGBA =  *std::get<0>(blackTup);
-
-    Image srcImg, tgtImg;
-    tgtImg.width = 128;
-    tgtImg.height = 128;
-    srcImg.width = 128;
-    srcImg.height = 128;
 
     srcPaths.push_back(srcFolder + "color.bmp");
     srcPaths.push_back(srcFolder + "LPE1.bmp");
@@ -326,7 +328,7 @@ void MainWindow::onStylizeButtonClick() {
     Convolve convolve;
     final_image = convolve.sharpen(final_image, 512, 512);
 
-    saveImageToFile("Output/RECONSTRUCTION.png", final_image, 512, 512);
+    saveImageToFile("Output/interactive.png", final_image, 512, 512);
 
     // save image
     m_canvas->m_width = 512;

@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
         std::vector<RGBA> stylized_image_RGBA = stylit.run(srcImg, tgtImg, num_iterations);
         Convolve convolve;
         std::vector<RGBA> sharpened = convolve.sharpen(stylized_image_RGBA, original_tgt_width, original_tgt_height);
-        saveImageToFile("Output/RECONSTRUCTION.png", sharpened, original_tgt_width, original_tgt_height);
+        saveImageToFile("Output/gchalk.png", sharpened, original_tgt_width, original_tgt_height);
         return 0;
     } else if (args.size() == 0) { // if no config file - have user draw
         MainWindow w;

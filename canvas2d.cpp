@@ -1,4 +1,6 @@
 #include "canvas2d.h"
+#include <tuple>
+#include "util.h"
 
 Common common;
 
@@ -19,7 +21,10 @@ void Canvas2D::init() {
  * @brief Canvas2D::clearCanvas sets all canvas pixels to blank white
  */
 void Canvas2D::clearCanvas() {
-    m_data.assign(m_width * m_height, RGBA{255, 255, 255, 255});
+    //m_data.assign(m_width * m_height, RGBA{255, 255, 255, 255});
+    std::tuple<std::vector<RGBA>*, int, int> stenciltup = loadImageFromFile("Data/stencil_zoomed.png");
+    std::vector<RGBA> stencil_RGBA =  *std::get<0>(stenciltup);
+    m_data = stencil_RGBA;
     settings.imagePath = "";
     displayImage();
 }
@@ -31,7 +36,7 @@ void Canvas2D::clearCanvas() {
  * @param file: file path to an image
  * @return True if successfully loads image, False otherwise.
  */
-bool Canvas2D::loadImageFromFile(const QString &file) {
+bool Canvas2D::loadImage(const QString &file) {
     QImage myImage;
     if (!myImage.load(file)) {
         std::cout<<"Failed to load in image"<<std::endl;

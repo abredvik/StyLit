@@ -8,7 +8,7 @@ Stylit::Stylit()
 
 }
 
-void init_image(const std::vector<QString>& LPEnames, const std::vector<RGBA>& style_image, Image& img, int num_iterations) {
+void init_image(const std::vector<QString>& LPEnames, std::vector<RGBA> style_image, Image& img, int num_iterations) {
 //#pragma omp parallel for
     Gaussianpyramid gaussianpyramid;
     img.pyramid = new Pyramid_t();
@@ -24,6 +24,8 @@ void init_image(const std::vector<QString>& LPEnames, const std::vector<RGBA>& s
     for (int i = 0; i < LPEnames.size(); ++i) {
         const QString& filename  = LPEnames[i];
         auto LPEtup = loadImageFromFile(filename);
+//        img.width = std::get<1>(LPEtup);
+//        img.height = std::get<2>(LPEtup);
         const std::vector<std::vector<RGBA>>& pyr = gaussianpyramid.create_pyrimid(num_iterations, *std::get<0>(LPEtup), img.width, img.height);
         for (int j = 0; j < pyr.size(); ++j) {
             img.pyramid->LPEs[j][i] = pyr[j];
@@ -58,8 +60,6 @@ std::vector<RGBA> Stylit::run(Image& src, Image& tgt, int iterations){
         tgt.patches_stylized = tgt_orig_style.second;
 
         stylit_algorithm(src, tgt, i);
-
-//        saveImageToFile("Output/ITERATION_" + QString(std::to_string(i).c_str()) + ".png", tgt.pyramid->style[i], tgt.width, tgt.height);
 
         if(i != iterations - 1){
             tgt.pyramid->style[i + 1] = scale.handle_scale(tgt.pyramid->style[i], tgt.width, tgt.height, 2, 2);
@@ -188,7 +188,6 @@ std::pair<int, double> Stylit::calculate_k_and_error_budget(std::vector<std::pai
     for (int i = 0; i < k; ++i) {
         T += errors[i].second;
     }
-
     return std::make_pair(k, T);
 }
 

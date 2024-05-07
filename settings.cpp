@@ -56,6 +56,7 @@ void Settings::saveSettings() {
     QSettings s("CS123", "CS123");
 
     s.setValue("brushType", brushType);
+    s.setValue("targetMeshType", targetMeshType);
     s.setValue("brushRadius", brushRadius);
     s.setValue("brushRed", brushColor.r);
     s.setValue("brushGreen", brushColor.g);
