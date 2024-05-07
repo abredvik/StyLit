@@ -55,10 +55,12 @@ std::pair<std::vector<Patch*>, std::vector<Patch*>> get_patches(const std::vecto
                         LPEpatch->buffer[patch_index + 1] = uint8_to_float(center.g);
                         LPEpatch->buffer[patch_index + 2] = uint8_to_float(center.b);
                         if (k == 0) {
+                            LPEpatch->neighbor_patches.push_back(-1);
                             const RGBA& styleCenter = style[pos_to_index(Vector2i(col, row), width)];
                             stylePatch->buffer[patch_index] = uint8_to_float(styleCenter.r);
                             stylePatch->buffer[patch_index + 1] = uint8_to_float(styleCenter.g);
                             stylePatch->buffer[patch_index + 2] = uint8_to_float(styleCenter.b);
+                            stylePatch->neighbor_patches.push_back(-1);
                         }
                     } else {
                         int pixel_index = pos_to_index(Vector2i(j, i), width);
@@ -296,7 +298,7 @@ NNF_t Patchmatcher::patch_match(const Image& src, const Image& tgt, std::unorder
     // fill NNF randomly
     NNF_t NNF;
     int imgSize = src.patches_original.size();
-    int numIterations = 2;
+    int numIterations = 6;
 
     randomize_NNF(NNF, src, tgt, unmatched);
 

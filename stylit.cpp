@@ -226,27 +226,37 @@ Vector2i Stylit::nearest_neighbor(const Image& src, const VectorXf& tgt_patch, c
     return nearest;
 }
 
-RGBA Stylit::average(int index, const Image& src, Image& tgt){
-
+RGBA Stylit::average(int index, const Image& src, Image& tgt) {
+    // For debugging: assert(tgt.patches_original[index]->neighbor_patches.size() = 25);
+    // Initialize average color
     float r, g, b;
     r = 0;
     g = 0;
     b = 0;
+    // Initialize maximum number of neighbors
     int j = 24;
-    for(int neighbor_index : tgt.patches_original[index]->neighbor_patches){
-        Vector2i offset = final_reverse_NNF[neighbor_index];
-        Vector2i xy = index_to_position(neighbor_index, tgt.width);
-        int source_index = pos_to_index(xy + offset, src.width);
-        // Might be causing issues for edge pixels
-        r += src.patches_stylized[source_index]->buffer[j * 3];
-        g += src.patches_stylized[source_index]->buffer[(j * 3) + 1];
-        b += src.patches_stylized[source_index]->buffer[(j * 3) + 2];
-        --j;
+    // Initialize number of valid neighbors
+    int valid_neighbors = 0;
+    for(int neighbor_index : tgt.patches_original[index]->neighbor_patches) {
+        // If valid neighbor
+        if (neighbor_index >= 0) {
+            // Find corresponding source index
+            Vector2i offset = final_reverse_NNF[neighbor_index];
+            Vector2i xy = index_to_position(neighbor_index, tgt.width);
+            int source_index = pos_to_index(xy + offset, src.width);
+            // Add color
+            r += src.patches_stylized[source_index]->buffer[j * 3];
+            g += src.patches_stylized[source_index]->buffer[(j * 3) + 1];
+            b += src.patches_stylized[source_index]->buffer[(j * 3) + 2];
+            --j;
+            // Update # of valid neighbors
+            valid_neighbors++;
+        }
     }
-    r = r / tgt.patches_original[index]->neighbor_patches.size();
-    g = g / tgt.patches_original[index]->neighbor_patches.size();
-    b = b / tgt.patches_original[index]->neighbor_patches.size();
-
+    // Take the average
+    r = r / valid_neighbors;
+    g = g / valid_neighbors;
+    b = b / valid_neighbors;
     return toRGBA(Vector3f(r, g, b));
 }
 

@@ -289,7 +289,7 @@ void MainWindow::onStylizeButtonClick() {
         tgtFolder = "Data/Bellpepper_128/";
         break;
     default:
-        tgtFolder = "Data/Guy_128/";
+        tgtFolder = "Data/Guy_128_New/";
     }
 
     auto blackTup = loadImageFromFile(tgtFolder + "black_square.bmp");
