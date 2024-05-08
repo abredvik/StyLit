@@ -62,12 +62,14 @@ int main(int argc, char *argv[])
         srcPaths.push_back(srcFolder + "LPE2.bmp");
         srcPaths.push_back(srcFolder + "LPE3.bmp");
         srcPaths.push_back(srcFolder + "LPE4.bmp");
+        // srcPaths.push_back(srcFolder + "LPE5.bmp");
 
         tgtPaths.push_back(tgtFolder + "color.bmp");
         tgtPaths.push_back(tgtFolder + "LPE1.bmp");
         tgtPaths.push_back(tgtFolder + "LPE2.bmp");
         tgtPaths.push_back(tgtFolder + "LPE3.bmp");
         tgtPaths.push_back(tgtFolder + "LPE4.bmp");
+        // tgtPaths.push_back(tgtFolder + "LPE5.bmp");
 
         init_image(srcPaths, style_RGBA, srcImg, num_iterations);
         init_image(tgtPaths, black_RGBA, tgtImg, num_iterations);
