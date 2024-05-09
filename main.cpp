@@ -61,13 +61,13 @@ int main(int argc, char *argv[])
         srcPaths.push_back(srcFolder + "LPE1.bmp");
         srcPaths.push_back(srcFolder + "LPE2.bmp");
         srcPaths.push_back(srcFolder + "LPE3.bmp");
-        srcPaths.push_back(srcFolder + "LPE4.bmp");
+        //srcPaths.push_back(srcFolder + "LPE4.bmp");
 
         tgtPaths.push_back(tgtFolder + "color.bmp");
         tgtPaths.push_back(tgtFolder + "LPE1.bmp");
         tgtPaths.push_back(tgtFolder + "LPE2.bmp");
         tgtPaths.push_back(tgtFolder + "LPE3.bmp");
-        tgtPaths.push_back(tgtFolder + "LPE4.bmp");
+        //tgtPaths.push_back(tgtFolder + "LPE4.bmp");
 
         init_image(srcPaths, style_RGBA, srcImg, num_iterations);
         init_image(tgtPaths, black_RGBA, tgtImg, num_iterations);
@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
         std::vector<RGBA> stylized_image_RGBA = stylit.run(srcImg, tgtImg, num_iterations);
         Convolve convolve;
         std::vector<RGBA> sharpened = convolve.sharpen(stylized_image_RGBA, original_tgt_width, original_tgt_height);
-        saveImageToFile("Output/RECONSTRUCTION.png", sharpened, original_tgt_width, original_tgt_height);
+        saveImageToFile("Output/balance3.png", sharpened, original_tgt_width, original_tgt_height);
         return 0;
     } else if (args.size() == 0) { // if no config file - have user draw
         MainWindow w;
